@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Rounded square background with teal gradient (matches btn-primary) -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#0f766e"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#bg)"/>
+  <!-- ShieldCheck icon (lucide) centered, white -->
+  <g transform="translate(6, 5)" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M10 1L2 4.5V10c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V4.5L10 1z"/>
+    <polyline points="6.5 10.5 9 13 13.5 8"/>
+  </g>
+</svg>

@@ -1,0 +1,7 @@
+Django>=4.0
+django-cors-headers
+bandit
+pylint
+flake8
+autopep8
+reportlab
