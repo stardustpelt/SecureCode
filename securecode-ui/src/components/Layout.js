@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Moon, Sun, Menu, X, Terminal } from 'lucide-react';
+import { Moon, Sun, Menu, X, Terminal } from 'lucide-react';
 
 function Layout({ children, currentPage, onNavigate }) {
   const [isDark, setIsDark] = React.useState(false);
@@ -38,8 +38,8 @@ function Layout({ children, currentPage, onNavigate }) {
           onClick={() => handleNavigate('home')}
           className="flex items-center gap-3 group brand-link"
         >
-          <div className="brand-mark flex items-center justify-center transition-transform group-hover:-rotate-6">
-            <ShieldCheck className="w-4.5 h-4.5 text-white" size={18} />
+          <div className="brand-mark flex items-center justify-center text-[15px] font-black text-[#1d2a20] transition-transform group-hover:-rotate-6">
+            S
           </div>
           <div className="flex flex-col leading-none">
             <span className="text-base font-bold text-slate-900 dark:text-slate-100">SecureCode</span>
@@ -126,8 +126,8 @@ function Layout({ children, currentPage, onNavigate }) {
       <footer className="site-footer border-t border-slate-200 dark:border-slate-800 mt-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="brand-mark brand-mark-small flex items-center justify-center">
-              <ShieldCheck size={12} className="text-white" />
+            <div className="brand-mark brand-mark-small flex items-center justify-center text-[11px] font-black text-[#1d2a20]">
+              S
             </div>
             <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">SecureCode</span>
           </div>
