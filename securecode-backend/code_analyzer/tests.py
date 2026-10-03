@@ -171,3 +171,15 @@ class AnalyzeReportPathTests(TestCase):
 		self.assertEqual(response.status_code, 500)
 		self.assertEqual(response.json(), {'error': 'Internal server error'})
 		self.assertIn('private detail', logged.output[0])
+
+	def test_analysis_reports_that_source_was_not_executed(self):
+		response = self.client.post(
+			'/api/analyze/',
+			data=json.dumps({'code': 'value = 1'}),
+			content_type='application/json',
+		)
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.json()['output'], 'No code was executed.')
+
+	def test_cli_download_route_is_removed(self):
+		self.assertEqual(self.client.get('/api/download/cli/').status_code, 404)

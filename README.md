@@ -17,7 +17,7 @@ If port `3000` or `8000` is occupied, stop that process or rerun `./run-local.sh
 
 The API-only backend is in `securecode-api/`. See [Quick Start](docs/QUICKSTART.md) for setup options.
 
-**Security:** The full backend analyzes submitted code without executing it. The separate `securecode-api` backend still executes valid submissions; use only trusted code with that backend and do not expose the development server to untrusted networks.
+**Security:** Both Django APIs and both CLIs inspect submitted Python source without executing it. The APIs return `No code was executed.` Static analysis is heuristic and does not prove that code is secure.
 
 ## Documentation
 

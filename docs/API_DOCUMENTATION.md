@@ -1,6 +1,6 @@
 # API Reference
 
-Both backends expose the same endpoints under `/api/`. The API-only backend checks indentation and syntax. The full backend also runs pattern-based security and code-quality checks.
+Both backends expose the same endpoints under `/api/` and run syntax/indentation, pattern-based security, and code-quality checks. The API-only CLI remains syntax-and-indentation-only; the full-backend CLI also runs security and code-quality checks.
 
 ## Endpoints
 
@@ -41,7 +41,7 @@ The download is a PDF. Without `download=true`, the endpoint returns JSON with t
 
 ## Security
 
-The full `securecode-backend` API does not execute submitted code. The separate `securecode-api` backend still executes submissions when syntax and indentation checks pass, with a five-second timeout; this is not a sandbox. Use only trusted code with that backend. Development settings also allow all hosts and CORS origins; do not expose the server to untrusted networks or use these settings in production.
+Neither API executes submitted code; both return `No code was executed.` Scanner results are heuristic and may miss issues or report false positives. The local launcher binds to loopback by default. Both backends use explicit host and CORS environment settings; set them deliberately before exposing an unauthenticated API beyond the local machine.
 
 ## Local and network addresses
 

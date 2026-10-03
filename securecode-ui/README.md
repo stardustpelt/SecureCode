@@ -26,4 +26,4 @@ The production bundle can be built with `npm run build`.
 
 The UI is not configured for access from other devices: its API address points to loopback on the browser's own computer. Binding Django to `0.0.0.0` alone does not change that.
 
-**Security:** The full backend analyzes submitted code without executing it. The separate API-only backend still executes valid submissions; use only trusted code with that backend.
+**Security:** Both Django APIs inspect submitted code without executing it and return `No code was executed.` Static checks are heuristic and do not prove that code is secure.

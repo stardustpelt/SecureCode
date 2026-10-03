@@ -129,7 +129,7 @@ python3 cli.py ./your-project --format json`}</CodeBlock>
                 body: `# JSON body\n{ "code": "def hello():\\n    print('hi')", "filename": "test" }\n\n# Or multipart/form-data\nform.append('file', yourFile)`,
               },
               {
-                method: 'GET', path: '/api/report/<filename>/?download=true', desc: 'Download PDF report',
+                method: 'GET', path: '/api/report/<report_id>/?download=true', desc: 'Download PDF using the report_id returned by analysis',
               },
             ].map(({ method, path, desc, body, response }) => (
               <div key={path} className="info-card rounded-xl p-4">

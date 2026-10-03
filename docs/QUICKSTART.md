@@ -42,4 +42,4 @@ Run the CLI from either backend directory:
 python3 cli.py path/to/file.py
 ```
 
-See [CLI Documentation](CLI_DOCUMENTATION.md) for full-backend CLI options. The full backend does not execute submitted code. The separate `securecode-api` backend still executes valid submissions and should only be used with trusted code.
+See [CLI Documentation](CLI_DOCUMENTATION.md) for full-backend CLI options. Both APIs inspect submitted source without executing it and return `No code was executed.` The API-only CLI checks syntax and indentation; the full-backend CLI also runs security-pattern and code-quality checks.

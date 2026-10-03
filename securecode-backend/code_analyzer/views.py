@@ -328,7 +328,7 @@ def analyze_code_api(request):
                     'report_id': report_id
                 })
             else:
-                code_output = "(Code execution disabled; submitted code was not run.)"
+                code_output = 'No code was executed.'
                 
                 report_text = "="*80 + "\n" + "SECURECODE ANALYSIS REPORT\n" + "="*80 + "\n\n✅ SUCCESS: No issues detected!\n\n" + "="*80 + "\nSUMMARY\n" + "="*80 + "\n" + "-"*80 + "\n" + f"{'Metric':<30} | {'Value':<10}\n" + "-"*80 + "\n" + f"{'Total Issues':<30} | {0:<10}\n" + f"{'Risk Level':<30} | {'SECURE':<10}\n" + "-"*80 + "\n\n" + "="*80 + "\nCODE OUTPUT:\n" + "="*80 + "\n" + code_output + "\n" + "="*80 + "\n\n" + "-"*80 + "\nSecureCode - Python Security & Code Quality Analyzer\nCopyright © 2025 noob_sandip.\n" + "-"*80
                 generate_pdf_report(report_text, report_path, errors=None, filename=filename, code_output=code_output)
@@ -392,27 +392,4 @@ def health_check_api(request):
         'service': 'SecureCode API',
         'version': '1.0'
     })
-
-@require_http_methods(["GET"])
-def download_cli(request):
-    """
-    API endpoint to download cli.py
-    GET /api/download/cli/
-    """
-    from django.http import HttpResponse
-    from django.conf import settings
-    import os
-    
-    # Get the base directory (where manage.py is)
-    base_dir = settings.BASE_DIR
-    cli_path = os.path.join(base_dir, 'cli_standalone.py')
-    
-    if os.path.exists(cli_path):
-        with open(cli_path, 'r') as f:
-            content = f.read()
-        response = HttpResponse(content, content_type='text/x-python')
-        response['Content-Disposition'] = 'attachment; filename="cli.py"'
-        return response
-    
-    return JsonResponse({'error': 'CLI file not found'}, status=404)
 

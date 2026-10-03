@@ -4,23 +4,19 @@ A prioritized backlog of practical improvements for SecureCode. Start with safet
 
 ## Priority 0: Safety and data handling
 
-### Stop executing submitted code by default
+### Keep analysis non-executing — implemented
 
-The full backend and CLIs now analyze code without executing it. The separate `securecode-api` backend still executes submissions that pass its checks. A five-second timeout limits duration, but does not isolate filesystem, network, process creation, or resource access.
+Both Django APIs and both CLIs now inspect Python source without executing it. The APIs return `No code was executed.` Regression tests should continue to protect this contract.
 
-- Remove execution from the API-only analysis path as well.
-- If execution is a required feature, make it a separate, explicit opt-in and run it in a real isolation boundary with restricted filesystem, network, privileges, CPU, and memory. A subprocess timeout alone is not a sandbox.
-- Update the UI and documentation to state exactly whether code is executed.
+- If execution is ever required, make it a separate, explicit opt-in and run it in a real isolation boundary with restricted filesystem, network, privileges, CPU, and memory. A subprocess timeout alone is not a sandbox.
 
-**Completion check:** tests submit valid code and verify that analysis does not execute it by default; any opt-in execution tests verify the configured isolation boundary.
+**Completion check:** both API test suites verify the no-execution response; retain a side-effect regression test if execution paths are added.
 
-### Validate report filenames and paths
+### Validate report filenames and paths — implemented
 
-The API derives a report path from the submitted filename. Treat that value as untrusted input.
+Report display names are sanitized, report files use random UUID IDs, and resolved report paths are constrained to the reports directory. Reports older than 24 hours are removed when analysis is requested.
 
-- Restrict filenames to a safe character set or generate server-side identifiers.
-- Resolve report paths and verify they remain inside the reports directory.
-- Avoid collisions when simultaneous requests use the same filename.
+**Completion check:** regression tests cover traversal-like names, UUID downloads, and repeated display names.
 
 **Completion check:** tests cover path traversal strings, separators, empty names, unusual Unicode, and repeated or concurrent names; no file is created outside the report directory.
 
