@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import importlib.util
 import json
+import logging
 import os
 from pathlib import Path
 import tempfile
@@ -16,6 +17,8 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.units import mm
 import io
+
+logger = logging.getLogger(__name__)
 
 def _safe_report_name(name):
     name = os.path.basename(str(name or ''))
@@ -306,8 +309,9 @@ def analyze_code_api(request):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
     except (RecursionError, MemoryError, ValueError):
         return JsonResponse({'error': 'Input could not be analyzed safely.'}, status=400)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+    except Exception:
+        logger.exception('Unexpected error while analyzing Python code')
+        return JsonResponse({'error': 'Internal server error'}, status=500)
 
 @require_http_methods(["GET"])
 def get_report_api(request, report_id):

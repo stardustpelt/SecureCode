@@ -158,3 +158,16 @@ class AnalyzeReportPathTests(TestCase):
 		uploaded = SimpleUploadedFile('large.py', b'x' * 200_001)
 		response = self.client.post('/api/analyze/', {'file': uploaded})
 		self.assertEqual(response.status_code, 413)
+
+	def test_unexpected_errors_are_logged_but_not_returned(self):
+		with self.assertLogs('code_analyzer.views', level='ERROR') as logged:
+			with patch('code_analyzer.views.check_indentation', side_effect=RuntimeError('private detail')):
+				response = self.client.post(
+					'/api/analyze/',
+					data=json.dumps({'code': 'value = 1'}),
+					content_type='application/json',
+				)
+
+		self.assertEqual(response.status_code, 500)
+		self.assertEqual(response.json(), {'error': 'Internal server error'})
+		self.assertIn('private detail', logged.output[0])
