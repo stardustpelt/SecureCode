@@ -19,12 +19,27 @@ The API-only backend is in `securecode-api/`. See [Quick Start](docs/QUICKSTART.
 
 **Security:** Both Django APIs and both CLIs inspect submitted Python source without executing it. The APIs return `No code was executed.` Static analysis is heuristic and does not prove that code is secure.
 
+## API
+
+The local API is available at `http://127.0.0.1:8000/api/` when the app is running.
+
+- `GET /api/health/` checks API availability.
+- `POST /api/analyze/` accepts JSON containing Python source, or a `.py` file upload.
+- `GET /api/report/<report_id>/?download=true` downloads the PDF report returned by an analysis.
+
+Example request body:
+
+```json
+{
+	"code": "print('Hello, world!')",
+	"filename": "example"
+}
+```
+
+The analysis endpoint has no user authentication. Keep it on loopback; do not expose it to a shared network or the public internet without adding and reviewing appropriate access controls.
+
 ## Documentation
 
 - [Quick Start](docs/QUICKSTART.md): run the full app or API-only backend
 - [Analysis Capabilities](docs/ANALYSIS_CAPABILITIES.md): checks, backend differences, and limitations
-- [Improvement Suggestions](docs/IMPROVEMENT_SUGGESTIONS.md): prioritized safety, scanner, API, and maintenance work
-- [API Reference](docs/API_DOCUMENTATION.md): endpoints and request/response formats
 - [CLI Guide](docs/CLI_DOCUMENTATION.md): local file checks
-- [Project Summary](docs/PROJECT_SUMMARY.md): components and backend differences
-- [Security Scanner Guide](securecode-backend/docs/SECURITY_SCANNER_GUIDE.md): full-backend checks and limitations
