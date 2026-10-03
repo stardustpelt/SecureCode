@@ -1,6 +1,151 @@
 import re
 import ast
 
+_DANGEROUS_BUILTINS = {
+    'eval': ('Code Injection - eval()', 'Use of eval() can execute arbitrary code',
+             'Avoid eval(). Use ast.literal_eval() for safe evaluation or refactor code'),
+    'exec': ('Code Injection - exec()', 'Use of exec() can execute arbitrary code',
+             'Avoid exec(). Refactor to use safer alternatives'),
+    'compile': ('Code Injection - compile()', 'Use of compile() can execute executable code',
+                'Avoid compile() with untrusted input'),
+}
+_SUBPROCESS_CALLS = {'Popen', 'call', 'check_call', 'check_output', 'run'}
+
+
+def _is_placeholder_secret(value):
+    value = value.strip()
+    lowered = value.lower()
+    return not value or lowered == 'changeme' or (value.startswith('<') and value.endswith('>'))
+
+
+def _has_hardcoded_secret(line, variable_pattern):
+    match = re.search(
+        rf'\b(?:{variable_pattern})\s*=\s*(["\'])(.*?)\1',
+        line,
+        re.IGNORECASE,
+    )
+    return bool(match and not _is_placeholder_secret(match.group(2)))
+
+
+def _find_dangerous_calls(source, lines):
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return []
+
+    os_modules = set()
+    subprocess_modules = set()
+    builtin_modules = set()
+    builtin_aliases = {}
+    os_function_aliases = set()
+    subprocess_function_aliases = set()
+    shadowed_builtins = set()
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                root_name = alias.name.split('.')[0]
+                bound_name = alias.asname or root_name
+                if root_name == 'os':
+                    os_modules.add(bound_name)
+                elif root_name == 'subprocess':
+                    subprocess_modules.add(bound_name)
+                elif root_name == 'builtins':
+                    builtin_modules.add(bound_name)
+                if bound_name in _DANGEROUS_BUILTINS:
+                    shadowed_builtins.add(bound_name)
+        elif isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                bound_name = alias.asname or alias.name
+                if node.module == 'builtins' and alias.name in _DANGEROUS_BUILTINS:
+                    builtin_aliases[bound_name] = alias.name
+                elif node.module == 'os' and alias.name == 'system':
+                    os_function_aliases.add(bound_name)
+                elif node.module == 'subprocess' and alias.name in _SUBPROCESS_CALLS:
+                    subprocess_function_aliases.add(bound_name)
+                elif alias.name in _DANGEROUS_BUILTINS:
+                    shadowed_builtins.add(bound_name)
+        elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+            if node.id in _DANGEROUS_BUILTINS:
+                shadowed_builtins.add(node.id)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            if node.name in _DANGEROUS_BUILTINS:
+                shadowed_builtins.add(node.name)
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                arguments = node.args.posonlyargs + node.args.args + node.args.kwonlyargs
+                if node.args.vararg:
+                    arguments.append(node.args.vararg)
+                if node.args.kwarg:
+                    arguments.append(node.args.kwarg)
+                shadowed_builtins.update(
+                    argument.arg for argument in arguments
+                    if argument.arg in _DANGEROUS_BUILTINS
+                )
+
+    findings = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+
+        finding_type = None
+        function = node.func
+        if isinstance(function, ast.Name):
+            if function.id in builtin_aliases:
+                finding_type = _DANGEROUS_BUILTINS[builtin_aliases[function.id]][0]
+            elif function.id in os_function_aliases:
+                finding_type = 'Command Injection - os.system()'
+            elif function.id in subprocess_function_aliases and _uses_shell_true(node):
+                finding_type = 'Command Injection - shell=True'
+            elif function.id in _DANGEROUS_BUILTINS and function.id not in shadowed_builtins:
+                finding_type = _DANGEROUS_BUILTINS[function.id][0]
+        elif isinstance(function, ast.Attribute) and isinstance(function.value, ast.Name):
+            module_name = function.value.id
+            if module_name in builtin_modules and function.attr in _DANGEROUS_BUILTINS:
+                finding_type = _DANGEROUS_BUILTINS[function.attr][0]
+            elif module_name in os_modules and function.attr == 'system':
+                finding_type = 'Command Injection - os.system()'
+            elif (module_name in subprocess_modules and function.attr in _SUBPROCESS_CALLS
+                  and _uses_shell_true(node)):
+                finding_type = 'Command Injection - shell=True'
+
+        if finding_type is None:
+            continue
+
+        if finding_type.startswith('Code Injection - '):
+            detail = next(value for value in _DANGEROUS_BUILTINS.values() if value[0] == finding_type)
+            severity = 'CRITICAL'
+            message, suggestion = detail[1], detail[2]
+        elif finding_type == 'Command Injection - os.system()':
+            severity = 'HIGH'
+            message = 'os.system() with user input can lead to command injection'
+            suggestion = 'Use subprocess with shell=False and pass command as list'
+        else:
+            severity = 'HIGH'
+            message = 'Using shell=True can lead to command injection'
+            suggestion = 'Use shell=False and pass command as list: subprocess.run(["cmd", arg1, arg2])'
+
+        line_num = node.lineno
+        findings.append({
+            'type': finding_type,
+            'severity': severity,
+            'line': line_num,
+            'message': message,
+            'code': lines[line_num - 1].rstrip() if 0 < line_num <= len(lines) else '',
+            'suggestion': suggestion,
+        })
+
+    return findings
+
+
+def _uses_shell_true(call):
+    return any(
+        keyword.arg == 'shell'
+        and isinstance(keyword.value, ast.Constant)
+        and keyword.value.value is True
+        for keyword in call.keywords
+    )
+
+
 def check_security_vulnerabilities(file_path):
     """Check Python file for security vulnerabilities."""
     vulnerabilities = []
@@ -9,6 +154,8 @@ def check_security_vulnerabilities(file_path):
         with open(file_path, 'r') as file:
             lines = file.readlines()
             content = ''.join(lines)
+
+        vulnerabilities.extend(_find_dangerous_calls(content, lines))
         
         for line_num, line in enumerate(lines, 1):
             line_stripped = line.strip()
@@ -16,7 +163,7 @@ def check_security_vulnerabilities(file_path):
             # ========== CRITICAL SEVERITY ==========
             
             # Check for hardcoded passwords
-            if re.search(r'(PASSWORD|password|pwd)\s*=\s*["\'][^"\']+["\']', line_stripped):
+            if _has_hardcoded_secret(line_stripped, r'[A-Z0-9_]*(?:PASSWORD|PWD)'):
                 vulnerabilities.append({
                     'type': 'Hardcoded Password',
                     'severity': 'CRITICAL',
@@ -26,43 +173,10 @@ def check_security_vulnerabilities(file_path):
                     'suggestion': 'Use environment variables or secure credential management'
                 })
             
-            # Check for eval() usage
-            if re.search(r'\beval\s*\(', line_stripped):
-                vulnerabilities.append({
-                    'type': 'Code Injection - eval()',
-                    'severity': 'CRITICAL',
-                    'line': line_num,
-                    'message': 'Use of eval() can execute arbitrary code',
-                    'code': line.rstrip(),
-                    'suggestion': 'Avoid eval(). Use ast.literal_eval() for safe evaluation or refactor code'
-                })
-            
-            # Check for exec() usage
-            if re.search(r'\bexec\s*\(', line_stripped):
-                vulnerabilities.append({
-                    'type': 'Code Injection - exec()',
-                    'severity': 'CRITICAL',
-                    'line': line_num,
-                    'message': 'Use of exec() can execute arbitrary code',
-                    'code': line.rstrip(),
-                    'suggestion': 'Avoid exec(). Refactor to use safer alternatives'
-                })
-            
-            # Check for compile() with user input
-            if re.search(r'\bcompile\s*\(', line_stripped):
-                vulnerabilities.append({
-                    'type': 'Code Injection - compile()',
-                    'severity': 'CRITICAL',
-                    'line': line_num,
-                    'message': 'Use of compile() can execute arbitrary code',
-                    'code': line.rstrip(),
-                    'suggestion': 'Avoid compile() with untrusted input'
-                })
-            
             # ========== HIGH SEVERITY ==========
             
             # Check for hardcoded SECRET_KEY
-            if re.search(r'SECRET_KEY\s*=\s*["\']', line_stripped):
+            if _has_hardcoded_secret(line_stripped, r'[A-Z0-9_]*SECRET_KEY'):
                 vulnerabilities.append({
                     'type': 'Hardcoded Secret Key',
                     'severity': 'HIGH',
@@ -73,7 +187,7 @@ def check_security_vulnerabilities(file_path):
                 })
             
             # Check for API keys
-            if re.search(r'API_KEY\s*=\s*["\']', line_stripped):
+            if _has_hardcoded_secret(line_stripped, r'[A-Z0-9_]*API_KEY'):
                 vulnerabilities.append({
                     'type': 'Hardcoded API Key',
                     'severity': 'HIGH',
@@ -84,7 +198,8 @@ def check_security_vulnerabilities(file_path):
                 })
             
             # Check for AWS keys
-            if re.search(r'(AWS_ACCESS_KEY|AWS_SECRET)', line_stripped):
+            if _has_hardcoded_secret(
+                    line_stripped, r'AWS_(?:ACCESS_KEY(?:_ID)?|SECRET(?:_ACCESS_KEY)?)'):
                 vulnerabilities.append({
                     'type': 'AWS Credentials',
                     'severity': 'CRITICAL',
@@ -95,7 +210,7 @@ def check_security_vulnerabilities(file_path):
                 })
             
             # Check for tokens
-            if re.search(r'(TOKEN|token|auth_token)\s*=\s*["\'][^"\']+["\']', line_stripped):
+            if _has_hardcoded_secret(line_stripped, r'[A-Z0-9_]*TOKEN'):
                 vulnerabilities.append({
                     'type': 'Hardcoded Token',
                     'severity': 'HIGH',
@@ -125,28 +240,6 @@ def check_security_vulnerabilities(file_path):
                     'message': 'SQL query built with string concatenation - vulnerable to SQL injection',
                     'code': line.rstrip(),
                     'suggestion': 'Use ORM or parameterized queries instead of string concatenation'
-                })
-            
-            # Command Injection - os.system
-            if re.search(r'os\.system\s*\(', line_stripped):
-                vulnerabilities.append({
-                    'type': 'Command Injection - os.system()',
-                    'severity': 'HIGH',
-                    'line': line_num,
-                    'message': 'os.system() with user input can lead to command injection',
-                    'code': line.rstrip(),
-                    'suggestion': 'Use subprocess with shell=False and pass command as list'
-                })
-            
-            # Command Injection - shell=True in subprocess
-            if re.search(r'subprocess\.[^(]*\([^)]*shell\s*=\s*True', line_stripped):
-                vulnerabilities.append({
-                    'type': 'Command Injection - shell=True',
-                    'severity': 'HIGH',
-                    'line': line_num,
-                    'message': 'Using shell=True can lead to command injection',
-                    'code': line.rstrip(),
-                    'suggestion': 'Use shell=False and pass command as list: subprocess.run(["cmd", arg1, arg2])'
                 })
             
             # Command Injection - os.popen

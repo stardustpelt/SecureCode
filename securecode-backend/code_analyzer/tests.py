@@ -10,6 +10,7 @@ from unittest.mock import patch
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
+from code_analyzer.views import check_low_severity_issues, check_security_vulnerabilities
 
 
 class AnalyzeReportPathTests(TestCase):
@@ -183,3 +184,67 @@ class AnalyzeReportPathTests(TestCase):
 
 	def test_cli_download_route_is_removed(self):
 		self.assertEqual(self.client.get('/api/download/cli/').status_code, 404)
+
+	def _scan_security_source(self, source):
+		source_path = self.work_dir / 'scanner_case.py'
+		source_path.write_text(source)
+		return check_security_vulnerabilities(str(source_path)) or []
+
+	def test_scanner_sample_files(self):
+		samples_dir = Path(__file__).resolve().parents[2] / 'samples'
+		bad_file = samples_dir / 'test_bad.py'
+		good_file = samples_dir / 'test_good.py'
+		bad_quality = check_low_severity_issues(str(bad_file)) or []
+		good_quality = check_low_severity_issues(str(good_file)) or []
+
+		self.assertTrue(any(item['type'] == 'Syntax Error' for item in bad_quality))
+		self.assertFalse(any(item['type'] == 'Syntax Error' for item in good_quality))
+		self.assertFalse(check_security_vulnerabilities(str(bad_file)))
+		self.assertFalse(check_security_vulnerabilities(str(good_file)))
+
+	def test_ast_detection_distinguishes_builtin_calls_and_import_aliases(self):
+		findings = self._scan_security_source(
+			'import re\n'
+			'import builtins as bi\n'
+			'from builtins import eval as evaluate\n'
+			'import os as operating_system\n'
+			'from os import system as launch\n'
+			'import subprocess as proc\n'
+			'from subprocess import run as run_command\n'
+			'pattern = re.compile("[a-z]+")\n'
+			'eval(user_input)\n'
+			'object.eval(user_input)\n'
+			'compile(user_input, "<string>", "exec")\n'
+			'evaluate(user_input)\n'
+			'bi.exec(user_input)\n'
+			'operating_system.system(command)\n'
+			'launch(command)\n'
+			'proc.run(command, shell=True)\n'
+			'proc.run(command, shell=False)\n'
+			'run_command(command, shell=True)\n'
+		)
+		finding_types = [item['type'] for item in findings]
+
+		self.assertEqual(finding_types.count('Code Injection - eval()'), 2)
+		self.assertIn('Code Injection - exec()', finding_types)
+		self.assertIn('Code Injection - compile()', finding_types)
+		self.assertEqual(finding_types.count('Command Injection - os.system()'), 2)
+		self.assertEqual(finding_types.count('Command Injection - shell=True'), 2)
+
+	def test_placeholder_and_environment_secrets_are_ignored(self):
+		findings = self._scan_security_source(
+			'PASSWORD = ""\n'
+			'TOKEN = "changeme"\n'
+			'API_KEY = "<your-api-key>"\n'
+			'SECRET_KEY = os.environ.get("SECRET_KEY")\n'
+			'AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")\n'
+			'REAL_TOKEN = "token-value-123"\n'
+			'REAL_PASSWORD = "password-value-123"\n'
+		)
+		finding_types = [item['type'] for item in findings]
+
+		self.assertNotIn('Hardcoded Secret Key', finding_types)
+		self.assertNotIn('Hardcoded API Key', finding_types)
+		self.assertNotIn('AWS Credentials', finding_types)
+		self.assertIn('Hardcoded Token', finding_types)
+		self.assertIn('Hardcoded Password', finding_types)
