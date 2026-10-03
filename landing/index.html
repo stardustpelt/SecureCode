@@ -46,13 +46,11 @@
       <div class="hero-panel" aria-label="Illustrative SecureCode finding">
         <div class="panel-top"><span class="window-lights" aria-hidden="true"><i></i><i></i><i></i></span><span>example_scan.py</span><span class="panel-state">STATIC CHECK</span></div>
         <div class="code-preview" aria-label="Example code displaying a possible SQL injection pattern">
-          <span class="line-numbers" aria-hidden="true">08<br>09<br>10<br>11</span>
+          <span class="line-numbers" aria-hidden="true">08<br>09</span>
           <pre><span class="code-keyword">def</span> lookup_user(user_id):
-    query = <span class="code-string">"SELECT * FROM users "</span>
-    query += <span class="code-risk">"WHERE id = "</span> + user_id
-    cursor.execute(query)</pre>
+    cursor.execute(<span class="code-string">"SELECT * FROM users WHERE id = "</span> <span class="code-risk">+ user_id</span>)</pre>
         </div>
-        <div class="sample-finding"><span class="severity severity-high">HIGH</span><span>Possible SQL injection</span><span class="finding-location">L10</span></div>
+        <div class="sample-finding"><span class="severity severity-high">HIGH</span><span>Possible SQL injection</span><span class="finding-location">L09</span></div>
         <div class="panel-bottom"><span><i aria-hidden="true"></i> Example output</span><span>Source is read, not run</span></div>
         <div class="panel-stamp" aria-hidden="true">READ<br>DON'T RUN</div>
       </div>
