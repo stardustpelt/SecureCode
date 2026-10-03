@@ -1,8 +1,11 @@
 import json
 import os
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 
+from django.conf import settings
 from django.test import TestCase
 
 
@@ -73,3 +76,25 @@ class AnalyzeReportPathTests(TestCase):
 		first_report = (self.work_dir / 'reports' / f'{report_ids[0]}.pdf').read_bytes()
 		second_report = (self.work_dir / 'reports' / f'{report_ids[1]}.pdf').read_bytes()
 		self.assertNotEqual(first_report, second_report)
+
+	def test_cors_and_hosts_are_restricted(self):
+		self.assertNotIn('*', settings.ALLOWED_HOSTS)
+		self.assertFalse(settings.CORS_ALLOW_ALL_ORIGINS)
+		self.assertFalse(settings.CORS_ALLOW_CREDENTIALS)
+		self.assertFalse(any('*' in origin for origin in settings.CORS_ALLOWED_ORIGINS))
+		self.assertFalse(any('*' in origin for origin in settings.CSRF_TRUSTED_ORIGINS))
+
+	def test_production_settings_require_a_secret_key(self):
+		environment = os.environ.copy()
+		environment.pop('DJANGO_SECRET_KEY', None)
+		environment['DJANGO_DEBUG'] = '0'
+		project_dir = Path(__file__).resolve().parents[1]
+		result = subprocess.run(
+			[sys.executable, '-c', 'import securecode_web.settings'],
+			cwd=project_dir,
+			env=environment,
+			capture_output=True,
+			text=True,
+		)
+		self.assertNotEqual(result.returncode, 0)
+		self.assertIn('DJANGO_SECRET_KEY must be set', result.stderr)

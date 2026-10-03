@@ -10,7 +10,18 @@ From the repository root, run:
 
 On first run, this creates `securecode-backend/.venv`, installs backend and React dependencies, applies migrations, and starts both servers bound to `127.0.0.1`. Open http://127.0.0.1:3000/; the API is at http://127.0.0.1:8000/api/. Press `Ctrl+C` to stop both servers. This launcher is local-machine-only.
 
+The launcher enables Django debug mode only for this local run and generates a fresh random secret key in memory for that process. It does not write the key to disk. Both settings files default to `DEBUG=False`; outside the launcher, set `DJANGO_SECRET_KEY` before starting Django or startup will fail. See the root `.env.example` for the supported environment variables. Django does not load that file automatically; source your local `.env` or export the values in your shell.
+
 ## API Only
+
+Configure the required settings before starting the API. For example, from `securecode-api`:
+
+```bash
+export DJANGO_SECRET_KEY='replace-with-a-fresh-random-secret'
+export DJANGO_DEBUG=0
+```
+
+Set `DJANGO_ALLOWED_HOSTS` and `DJANGO_CORS_ORIGINS` as needed for your deployment. Their local defaults are `127.0.0.1,localhost` and `http://127.0.0.1:3000,http://localhost:3000` respectively. Do not use debug mode or the example placeholder secret in production.
 
 ```bash
 cd securecode-api

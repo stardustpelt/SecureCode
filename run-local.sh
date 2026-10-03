@@ -75,6 +75,9 @@ fi
 source "$VENV_DIR/bin/activate"
 printf 'Using Python environment: %s\n' "$VIRTUAL_ENV"
 
+export DJANGO_DEBUG=1
+export DJANGO_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')"
+
 python -m pip install -r "$BACKEND_DIR/requirements.txt"
 
 if ! command -v npm >/dev/null 2>&1; then
