@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SecureCode is a local-first Python security and code-quality scanner for educational use.">
+  <meta name="theme-color" content="#17251f">
+  <title>SecureCode | Local-First Python Security Scanner</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="SecureCode home">
+      <span class="brand-mark" aria-hidden="true">S</span>
+      <span>SecureCode<small>PYTHON STATIC ANALYSIS</small></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#samples">Sample scans</a>
+      <a href="#docs">Docs</a>
+      <a href="#security">Security</a>
+    </nav>
+    <a class="header-link" href="https://github.com/stardustpelt/secure-code" target="_blank" rel="noopener noreferrer">
+      GitHub <span aria-hidden="true">↗</span>
+    </a>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="pulse-dot" aria-hidden="true"></span> A SMALL, LOCAL-FIRST PYTHON SCANNER</p>
+        <h1 id="hero-title">SecureCode</h1>
+        <p class="hero-subtitle">Local-First Python Security Scanner</p>
+        <p class="hero-lede">Make risky code easier to spot. SecureCode checks Python source for recognizable security patterns, syntax problems, and code-quality issues. Run it locally, review every finding, and keep your code on your own machine.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="https://github.com/stardustpelt/secure-code" target="_blank" rel="noopener noreferrer">Download from GitHub <span aria-hidden="true">↗</span></a>
+          <a class="button button-secondary" href="#features">Learn more <span aria-hidden="true">↓</span></a>
+        </div>
+        <div class="hero-facts" aria-label="Project characteristics">
+          <span>Python source</span><span>Local workflow</span><span>No code execution</span>
+        </div>
+      </div>
+      <div class="hero-panel" aria-label="Illustrative SecureCode finding">
+        <div class="panel-top"><span class="window-lights" aria-hidden="true"><i></i><i></i><i></i></span><span>example_scan.py</span><span class="panel-state">STATIC CHECK</span></div>
+        <div class="code-preview" aria-label="Example code displaying a possible SQL injection pattern">
+          <span class="line-numbers" aria-hidden="true">08<br>09<br>10<br>11</span>
+          <pre><span class="code-keyword">def</span> lookup_user(user_id):
+    query = <span class="code-string">"SELECT * FROM users "</span>
+    query += <span class="code-risk">"WHERE id = "</span> + user_id
+    cursor.execute(query)</pre>
+        </div>
+        <div class="sample-finding"><span class="severity severity-high">HIGH</span><span>Possible SQL injection</span><span class="finding-location">L10</span></div>
+        <div class="panel-bottom"><span><i aria-hidden="true"></i> Example output</span><span>Source is read, not run</span></div>
+        <div class="panel-stamp" aria-hidden="true">READ<br>DON'T RUN</div>
+      </div>
+      <a class="hero-scroll" href="#features"><span>01</span> Explore SecureCode <span aria-hidden="true">↓</span></a>
+    </section>
+
+    <section class="section features" id="features" aria-labelledby="features-title">
+      <div class="section-heading">
+        <p class="eyebrow">01 / FEATURES</p>
+        <h2 id="features-title">A practical first pass<br>for Python projects.</h2>
+        <p>Local tooling that makes common issues visible and gives you a useful place to start reviewing.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card"><span class="feature-index">01</span><span class="feature-icon" aria-hidden="true">⌕</span><h3>Security checks</h3><p>Look for patterns such as hardcoded credentials, dynamic execution, weak hashes, and injection-prone code.</p><span class="feature-label">PATTERN MATCHING</span></article>
+        <article class="feature-card"><span class="feature-index">02</span><span class="feature-icon" aria-hidden="true">{ }</span><h3>AST and code quality</h3><p>Parse Python syntax with the AST, then surface indentation and maintainability concerns such as mutable defaults and bare exception handlers.</p><span class="feature-label">PYTHON SOURCE</span></article>
+        <article class="feature-card"><span class="feature-index">03</span><span class="feature-icon" aria-hidden="true">◉</span><h3>Safe analysis</h3><p>Inspect source as text and parse its syntax. Submitted Python is not imported or executed by the scanner.</p><span class="feature-label">NO CODE EXECUTION</span></article>
+        <article class="feature-card"><span class="feature-index">04</span><span class="feature-icon" aria-hidden="true">▤</span><h3>Useful reports</h3><p>Review results in text or JSON, and create a PDF report with findings and recommendations.</p><span class="feature-label">TEXT · JSON · PDF</span></article>
+        <article class="feature-card"><span class="feature-index">05</span><span class="feature-icon" aria-hidden="true">⌂</span><h3>Local-first workflow</h3><p>Run the application on your computer. The standard launcher binds the UI and API to loopback.</p><span class="feature-label">YOUR MACHINE</span></article>
+        <article class="feature-card"><span class="feature-index">06</span><span class="feature-icon" aria-hidden="true">$</span><h3>One-command start</h3><p>Clone the repository, run the included launcher, and open the local interface in your browser.</p><span class="feature-label">./RUN-LOCAL.SH</span></article>
+      </div>
+      <p class="fine-print"><strong>Scope note:</strong> Security checks are heuristic. A clean scan is not proof that code is secure, and findings may include false positives.</p>
+    </section>
+
+    <section class="how-section" id="how-it-works" aria-labelledby="how-title">
+      <div class="how-inner">
+        <div class="section-heading section-heading-dark">
+          <p class="eyebrow">02 / HOW IT WORKS</p>
+          <h2 id="how-title">Download. Run locally.<br>Scan and review.</h2>
+          <p>The hosted landing page is informational only. The scanner runs as a local app after you download the repository.</p>
+        </div>
+        <div class="steps">
+          <article class="step"><span class="step-number">01</span><div class="step-symbol" aria-hidden="true">↓</div><h3>Download the source</h3><p>Clone the SecureCode repository to your computer.</p><pre><code>git clone https://github.com/stardustpelt/secure-code.git
+cd secure-code</code></pre></article>
+          <span class="step-arrow" aria-hidden="true">→</span>
+          <article class="step"><span class="step-number">02</span><div class="step-symbol" aria-hidden="true">&gt;_</div><h3>Run the launcher</h3><p>From the repository root, start the local UI and API.</p><pre><code>./run-local.sh</code></pre></article>
+          <span class="step-arrow" aria-hidden="true">→</span>
+          <article class="step"><span class="step-number">03</span><div class="step-symbol" aria-hidden="true">↗</div><h3>Open the browser</h3><p>Use the interface on your own computer, then inspect the report.</p><pre><code>http://127.0.0.1:3000</code></pre></article>
+        </div>
+        <p class="platform-note">The launcher currently targets Linux and requires Python 3, Node.js/npm, and <code>fuser</code>. See the repository quick start for details.</p>
+      </div>
+    </section>
+
+    <section class="section samples" id="samples" aria-labelledby="samples-title">
+      <div class="section-heading">
+        <p class="eyebrow">03 / SAMPLE SCANS</p>
+        <h2 id="samples-title">Patterns worth a closer look.</h2>
+        <p>Illustrative snippets based on scanner rules and repository samples. These cards are examples, not live scans.</p>
+      </div>
+      <div class="sample-grid">
+        <article class="sample-card"><div class="sample-card-head"><span class="severity severity-critical">CRITICAL</span><span>dynamic execution</span></div><pre><code>result = eval(user_input)</code></pre><p>Dynamic evaluation can execute an unintended expression.</p></article>
+        <article class="sample-card"><div class="sample-card-head"><span class="severity severity-high">HIGH</span><span>command injection</span></div><pre><code>os.system(command)</code></pre><p>Passing untrusted values to a system command can be dangerous.</p></article>
+        <article class="sample-card"><div class="sample-card-head"><span class="severity severity-medium">MEDIUM</span><span>debug configuration</span></div><pre><code>DEBUG = True</code></pre><p>Debug mode should not be enabled in a production deployment.</p></article>
+        <article class="sample-card"><div class="sample-card-head"><span class="severity severity-low">LOW</span><span>quality signal</span></div><pre><code>except:</code></pre><p>A bare exception handler can hide unexpected failures.</p></article>
+      </div>
+      <p class="sample-disclaimer">These snippets are displayed as text only. They are not executed by this website.</p>
+    </section>
+
+    <section class="section docs-section" id="docs" aria-labelledby="docs-title">
+      <div class="section-heading">
+        <p class="eyebrow">04 / DOCUMENTATION</p>
+        <h2 id="docs-title">Keep exploring.</h2>
+        <p>Project guides and scanner details live alongside the source on GitHub.</p>
+      </div>
+      <div class="docs-links">
+        <a href="https://github.com/stardustpelt/secure-code/blob/main/docs/QUICKSTART.md" target="_blank" rel="noopener noreferrer"><span>01</span><strong>Quick Start</strong><small>Setup and local launch</small><b aria-hidden="true">↗</b></a>
+        <a href="https://github.com/stardustpelt/secure-code/blob/main/docs/ANALYSIS_CAPABILITIES.md" target="_blank" rel="noopener noreferrer"><span>02</span><strong>Analysis Capabilities</strong><small>Checks and limitations</small><b aria-hidden="true">↗</b></a>
+        <a href="https://github.com/stardustpelt/secure-code/blob/main/docs/CLI_DOCUMENTATION.md" target="_blank" rel="noopener noreferrer"><span>03</span><strong>CLI Guide</strong><small>Scan files and folders</small><b aria-hidden="true">↗</b></a>
+      </div>
+    </section>
+
+    <section class="security-section" id="security" aria-labelledby="security-title">
+      <div class="security-icon" aria-hidden="true">!</div>
+      <div><p class="eyebrow">04 / SECURITY NOTICE</p><h2 id="security-title">Use responsibly. Review every result.</h2><p>SecureCode is an educational project for authorized use. Scan only code you own or have permission to analyze. Static analysis can miss vulnerabilities and report false positives; it is not a substitute for a professional security review.</p></div>
+    </section>
+
+    <section class="closing-cta" aria-labelledby="download-title">
+      <div><p class="eyebrow">READY TO TAKE A LOOK?</p><h2 id="download-title">Run the scanner on your own machine.</h2><p>Explore the source, inspect the rules, and try the local workflow.</p></div>
+      <a class="button button-dark" href="https://github.com/stardustpelt/secure-code" target="_blank" rel="noopener noreferrer">View and download on GitHub <span aria-hidden="true">↗</span></a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true">S</span><span>SecureCode<small>PYTHON STATIC ANALYSIS</small></span></a>
+    <p>Final Year Project · Cyber Security</p>
+    <a href="https://github.com/stardustpelt/secure-code" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+  </footer>
+</body>
+</html>
