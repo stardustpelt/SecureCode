@@ -8,8 +8,8 @@ Both backends expose the same endpoints under `/api/`. The API-only backend chec
 | --- | --- | --- |
 | `GET` | `/api/health/` | Health check |
 | `POST` | `/api/analyze/` | Analyze JSON code or upload a `.py` file |
-| `GET` | `/api/report/<filename>/` | Get report download information |
-| `GET` | `/api/report/<filename>/?download=true` | Download the generated PDF |
+| `GET` | `/api/report/<report_id>/` | Get report download information (32-character UUID hex) |
+| `GET` | `/api/report/<report_id>/?download=true` | Download the generated PDF |
 
 ## Analyze code
 
@@ -27,17 +27,17 @@ Or upload a Python file using multipart form data with the field name `file`:
 curl -X POST http://127.0.0.1:8000/api/analyze/ -F 'file=@example.py'
 ```
 
-The JSON response includes `status`, `has_errors`, `errors` when findings exist, `output` when checks pass, and a text `report`. Findings are returned in the response and are not stored in the configured SQLite database.
+The JSON response includes `status`, `has_errors`, `errors` when findings exist, `output` when checks pass, a text `report`, the display `filename`, and a random `report_id`. Findings are returned in the response and are not stored in the configured SQLite database.
 
 ## Download report
 
-Replace `example` with the response's `filename`:
+Use the response's `report_id` (not its display `filename`) to download the PDF:
 
 ```bash
-curl -OJ 'http://127.0.0.1:8000/api/report/example/?download=true'
+curl -OJ 'http://127.0.0.1:8000/api/report/0123456789abcdef0123456789abcdef/?download=true'
 ```
 
-The download is a PDF. Without `download=true`, the endpoint returns JSON with the PDF download URL. Reports are written to the backend's local `reports/` directory.
+The download is a PDF. Without `download=true`, the endpoint returns JSON with the PDF download URL. Reports are written under random UUID hex names in the backend's local `reports/` directory, so repeated requests with the same display filename do not overwrite one another.
 
 ## Security
 

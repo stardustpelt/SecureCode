@@ -4,6 +4,7 @@ from django.views.decorators.http import require_http_methods
 import json
 import os
 import tempfile
+import uuid
 from analyzer.indentation_check import check_indentation
 from analyzer.security_check import check_security_vulnerabilities
 from analyzer.low_severity_check import check_low_severity_issues
@@ -13,6 +14,21 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.units import mm
 import io
+
+def _safe_report_name(name):
+    name = os.path.basename(str(name or ''))
+    safe_name = ''.join(
+        char for char in name
+        if (char.isascii() and char.isalnum()) or char in '_-'
+    )[:64]
+    return safe_name or 'api_code'
+
+def _report_path(name):
+    reports_dir = os.path.realpath('reports')
+    report_path = os.path.realpath(os.path.join(reports_dir, f'{_safe_report_name(name)}.pdf'))
+    if os.path.commonpath((reports_dir, report_path)) != reports_dir:
+        raise ValueError('Invalid report path')
+    return report_path
 
 def _esc(text):
     return str(text).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
@@ -236,16 +252,18 @@ def analyze_code_api(request):
         # Handle file upload
         if request.FILES.get('file'):
             uploaded_file = request.FILES['file']
-            filename = os.path.splitext(uploaded_file.name)[0]
+            filename = _safe_report_name(os.path.splitext(uploaded_file.name)[0])
             code_content = uploaded_file.read().decode('utf-8')
         # Handle JSON body
         elif request.body:
             data = json.loads(request.body)
             code_content = data.get('code')
-            filename = data.get('filename', 'api_code')
+            filename = _safe_report_name(data.get('filename', 'api_code'))
         
         if not code_content:
             return JsonResponse({'error': 'No code provided'}, status=400)
+
+        report_id = uuid.uuid4().hex
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_file:
             temp_file.write(code_content)
@@ -267,7 +285,7 @@ def analyze_code_api(request):
                 all_issues.extend(low_severity_issues)
             
             os.makedirs('reports', exist_ok=True)
-            report_path = f'reports/{filename}.pdf'
+            report_path = _report_path(report_id)
             
             if all_issues:
                 report_text = format_error_report(all_issues, filename, False)
@@ -279,7 +297,8 @@ def analyze_code_api(request):
                     'error_count': len(all_issues),
                     'errors': all_issues,
                     'report': report_text,
-                    'filename': filename
+                    'filename': filename,
+                    'report_id': report_id
                 })
             else:
                 code_output = "(Code execution disabled; submitted code was not run.)"
@@ -293,7 +312,8 @@ def analyze_code_api(request):
                     'message': 'No issues detected',
                     'output': code_output,
                     'report': report_text,
-                    'filename': filename
+                    'filename': filename,
+                    'report_id': report_id
                 })
         finally:
             os.unlink(temp_path)
@@ -304,13 +324,13 @@ def analyze_code_api(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 @require_http_methods(["GET"])
-def get_report_api(request, filename):
+def get_report_api(request, report_id):
     """
     API endpoint to download report as text file
-    GET /api/report/<filename>/
+    GET /api/report/<report_id>/
     Add ?download=true to download as file attachment
     """
-    report_path = f'reports/{filename}.pdf'
+    report_path = _report_path(report_id)
     
     if os.path.exists(report_path):
         from django.http import HttpResponse
@@ -318,13 +338,13 @@ def get_report_api(request, filename):
             with open(report_path, 'rb') as f:
                 content = f.read()
             response = HttpResponse(content, content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="{filename}.pdf"'
+            response['Content-Disposition'] = f'attachment; filename="{report_id}.pdf"'
             return response
         
         return JsonResponse({
             'status': 'success',
-            'filename': filename,
-            'report': f'PDF report available at /api/report/{filename}/?download=true'
+            'report_id': report_id,
+            'report': f'PDF report available at /api/report/{report_id}/?download=true'
         })
     
     return JsonResponse({'error': 'Report not found'}, status=404)

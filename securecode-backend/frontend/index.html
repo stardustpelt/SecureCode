@@ -337,7 +337,7 @@
     
     <script>
         const API_BASE = 'http://127.0.0.1:8000/api';
-        let currentFilename = null;
+        let currentReportId = null;
 
         function displayFileName() {
             const input = document.getElementById('code_file');
@@ -363,6 +363,8 @@
 
             analyzeBtn.disabled = true;
             analyzeBtn.textContent = '⏳ Analyzing...';
+            currentReportId = null;
+            downloadBtn.disabled = true;
             resultsDiv.innerHTML = '<div class="loading">Analyzing your code...</div>';
             resultsDiv.style.display = 'block';
 
@@ -390,9 +392,9 @@
                 }
 
                 const result = await response.json();
-                currentFilename = result.filename;
+                currentReportId = result.report_id;
                 displayResults(result);
-                downloadBtn.disabled = false;
+                downloadBtn.disabled = !currentReportId;
 
             } catch (error) {
                 resultsDiv.innerHTML = `
@@ -422,8 +424,8 @@ Error: ${error.message}</div>
         }
 
         function downloadReport() {
-            if (currentFilename) {
-                window.location.href = `${API_BASE}/report/${currentFilename}/?download=true`;
+            if (currentReportId) {
+                window.location.href = `${API_BASE}/report/${currentReportId}/?download=true`;
             }
         }
     </script>

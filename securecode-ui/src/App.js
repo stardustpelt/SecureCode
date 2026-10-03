@@ -34,7 +34,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('paste');
   const [analyzing, setAnalyzing] = useState(false);
   const [report, setReport] = useState(null);
-  const [filename, setFilename] = useState(null);
+  const [reportId, setReportId] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -46,7 +46,7 @@ function App() {
   if (currentPage === 'docs')  return <Documentation onNavigate={setCurrentPage} />;
   if (currentPage === 'about') return <About onNavigate={setCurrentPage} />;
 
-  const resetForm = () => { setCode(''); setFile(null); setReport(null); setFilename(null); };
+  const resetForm = () => { setCode(''); setFile(null); setReport(null); setReportId(null); };
 
   const analyzeCode = async () => {
     if (!code && !file) {
@@ -56,6 +56,7 @@ function App() {
     }
     setAnalyzing(true);
     setReport(null);
+    setReportId(null);
     try {
       let response;
       if (file) {
@@ -71,7 +72,7 @@ function App() {
       }
       const result = await response.json();
       setReport(result);
-      setFilename(result.filename);
+      setReportId(result.report_id);
     } catch (err) {
       setReport({
         status: 'error', has_errors: true,
@@ -83,7 +84,7 @@ function App() {
   };
 
   const downloadReport = () => {
-    if (filename) window.location.href = `${API_BASE}/report/${filename}/?download=true`;
+    if (reportId) window.location.href = `${API_BASE}/report/${reportId}/?download=true`;
   };
 
   const getSeverityStats = () => {
@@ -310,7 +311,7 @@ function App() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={downloadReport}
-                disabled={!filename}
+                disabled={!reportId}
                 className="btn-success px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download size={15} />
