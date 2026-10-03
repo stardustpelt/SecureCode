@@ -12,9 +12,11 @@ This page describes the current scanners and their entry points. SecureCode has 
 | `securecode-backend/cli.py PATH` | Same checks and formats as the root CLI | Text, JSON, or PDF | No |
 | `securecode-api/cli.py PATH` | Syntax and indentation only | Text report | No |
 
-Both API endpoints accept pasted code as JSON or a `.py` file upload. Their responses include the combined findings, `has_errors`, `error_count`, a text report, the filename, and a message stating that no code was executed. A PDF report is also generated for every analysis, including clean submissions.
+Both API endpoints accept Python source as JSON or as a `.py` file upload, and neither executes submitted code. Responses include a status, report text, filename, and generated `report_id`; field names and clean/error response details differ slightly between the two backends. The full backend returns `has_errors`, `error_count`, and `errors` for clean and flagged submissions. The API-only backend uses `errors` for flagged submissions and may omit it for a clean result. Both generate a PDF report for each accepted analysis. Reports are stored locally; PDFs older than 24 hours are removed when a later analysis request triggers cleanup.
 
-The root and full-backend CLIs accept one or more `.py` files, directories scanned recursively, or `-` for standard input. Findings from selected files are combined into one report. CLI exit status is `1` when findings or path errors exist and `0` when the scan completes without findings.
+The analysis endpoint limits source to 200,000 characters, in addition to Django's request-body size limit. The local launcher binds the API to `127.0.0.1`. The API endpoint has no user authentication and is CSRF-exempt, so do not expose it to a shared network or the public internet without adding and reviewing access controls.
+
+The root and full-backend CLIs accept one or more `.py` files, directories scanned recursively, or `-` for standard input. Findings from selected files are combined into one report. CLI exit status is `1` when findings or path errors exist and `0` when the scan completes without findings. The `--quiet` option suppresses the report only when there are no findings.
 
 Example:
 
