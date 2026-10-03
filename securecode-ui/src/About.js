@@ -126,17 +126,17 @@ function About({ onNavigate }) {
               {
                 icon: CheckCircle,
                 title: 'Security is Non-Negotiable',
-                desc: 'Most vulnerabilities — SQL injection, hardcoded secrets, command injection — are preventable with early detection.',
+                desc: 'Common risks such as SQL injection, hardcoded secrets, and unsafe command calls are easier to review when surfaced early.',
               },
               {
                 icon: Users,
                 title: 'Free for Everyone',
-                desc: 'Enterprise security tools are expensive. SecureCode gives every developer access to the same quality of analysis.',
+                desc: 'SecureCode offers a lightweight set of local security and code-quality checks for learning and early review.',
               },
               {
                 icon: Zap,
                 title: 'Instant Feedback',
-                desc: 'Manual code reviews take hours. SecureCode gives you results in seconds, keeping your workflow fast.',
+                desc: 'Run a quick local scan to get findings and recommendations alongside your development workflow.',
               },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="flex items-start gap-4">
@@ -222,7 +222,7 @@ function About({ onNavigate }) {
               { emoji: '🎯', title: 'Accessibility', desc: 'Free security analysis for every developer.' },
               { emoji: '🚀', title: 'Integration', desc: 'Web UI, REST API, and CLI for any workflow.' },
               { emoji: '📚', title: 'Education', desc: 'Learn why each issue is dangerous and how to fix it.' },
-              { emoji: '⚡', title: 'Performance', desc: 'Fast, accurate results with minimal false positives.' },
+              { emoji: '⚡', title: 'Fast feedback', desc: 'Quick heuristic checks help surface code worth a closer review.' },
             ].map(({ emoji, title, desc }) => (
               <div key={title} className="info-card rounded-xl p-4 flex items-start gap-3">
                 <span className="text-xl flex-shrink-0">{emoji}</span>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Terminal, ChevronDown, ChevronUp, AlertTriangle, AlertCircle, Info, CheckCircle } from 'lucide-react';
+import { Terminal, ChevronDown, ChevronUp, AlertTriangle, AlertCircle, Info, CheckCircle } from 'lucide-react';
 import Layout from './components/Layout';
 
 const fadeUp = (delay = 0) => ({
@@ -57,11 +57,11 @@ function Documentation({ onNavigate }) {
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold hero-title tracking-tight mb-2">Documentation</h1>
           <p className="text-slate-600 dark:text-slate-400 text-base">
-            Test a single Python file in the web UI, or scan a project folder locally with the full CLI.
+            Check a pasted snippet or one Python file in the web UI, or scan files and folders with the full CLI.
           </p>
         </motion.div>
 
-        {/* Download CLI */}
+        {/* CLI entry point */}
         <motion.div {...fadeUp(0.05)} className="glass-panel rounded-2xl p-5 sm:p-7 mb-5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
@@ -70,19 +70,20 @@ function Documentation({ onNavigate }) {
                 <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">CLI Tool</h2>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Download the syntax-only CLI for individual Python files. For full security and quality scans across project folders, use the root CLI from a repository checkout.
+                The full CLI is included in the repository. Run it from the repository root to scan individual files or folders with the same security and quality checks used by the local API.
               </p>
             </div>
             <div className="flex gap-2 flex-shrink-0">
               <motion.a
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
-                href="https://raw.githubusercontent.com/arcanesandip/secure-code-vault/main/securecode-backend/frontend/cli.py"
-                download="cli.py"
+                href="https://github.com/stardustpelt/secure-code/blob/main/docs/CLI_DOCUMENTATION.md"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="btn-primary px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 no-underline"
               >
-                <Download size={14} />
-                cli.py
+                <Terminal size={14} />
+                CLI Guide
               </motion.a>
 
             </div>
@@ -94,30 +95,22 @@ function Documentation({ onNavigate }) {
           <h2 className="section-header text-lg font-bold mb-4">CLI Usage</h2>
           <div className="space-y-4">
             <div>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Downloaded CLI — syntax and indentation</p>
-              <CodeBlock>{`# Analyze one or more Python files
-python3 cli.py yourfile.py
-
-# Read from stdin
-cat yourfile.py | python3 cli.py -`}</CodeBlock>
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Output Options</p>
-              <CodeBlock>{`# Save report to file
-python3 cli.py yourfile.py -o report.txt
-
-# Quiet mode (errors only)
-python3 cli.py yourfile.py -q`}</CodeBlock>
-            </div>
-            <div>
               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Full scanner — from the repository root</p>
               <CodeBlock>{`# Scan one file or recursively scan a project folder
 python3 cli.py yourfile.py
 python3 cli.py ./your-project
 
-# Save combined findings as JSON or PDF
+# Read Python source from stdin
+cat yourfile.py | python3 cli.py -`}</CodeBlock>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Report formats</p>
+              <CodeBlock>{`# Save report to file
+python3 cli.py ./your-project -o findings.txt
 python3 cli.py ./your-project -o findings.json
-python3 cli.py ./your-project -o findings.pdf`}</CodeBlock>
+python3 cli.py ./your-project -o findings.pdf
+
+python3 cli.py ./your-project --format json`}</CodeBlock>
             </div>
           </div>
         </motion.div>

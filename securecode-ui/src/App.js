@@ -138,13 +138,13 @@ function App() {
               SecureCode
             </h1>
             <p className="text-slate-600 dark:text-slate-400 text-base sm:text-lg max-w-lg">
-              Detect security vulnerabilities, code quality issues, and syntax errors in your Python code — instantly.
+              Run local checks for recognizable security patterns, syntax problems, and code-quality issues in Python.
             </p>
           </div>
           <div className="intro-facts flex flex-col gap-2 text-sm">
             {[
-              { icon: Lock, label: 'Comprehensive Security Patterns' },
-              { icon: Bug, label: 'CRITICAL → LOW Severity' },
+              { icon: Lock, label: 'Selected Security Checks' },
+              { icon: Bug, label: 'Heuristic Severity Levels' },
               { icon: ShieldCheck, label: 'PDF Report Export' },
             ].map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
@@ -296,13 +296,13 @@ function App() {
                   </div>
                 )}
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                    {report.has_errors ? 'Issues Detected' : 'Code Looks Clean'}
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                    {report.has_errors ? 'Issues Detected' : 'No Findings Detected'}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     {report.has_errors
                       ? `${report.error_count} issue${report.error_count !== 1 ? 's' : ''} found`
-                      : 'No vulnerabilities or quality issues detected'}
+                      : 'The current checks did not flag any issues'}
                   </p>
                 </div>
               </div>
