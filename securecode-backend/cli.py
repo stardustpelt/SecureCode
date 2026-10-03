@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import sys
 import tempfile
-from xml.sax.saxutils import escape
+from html import escape
 
 from analyzer.indentation_check import check_indentation
 from analyzer.low_severity_check import check_low_severity_issues
