@@ -35,6 +35,8 @@ ALLOWED_HOSTS = [
     for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
     if host.strip()
 ]
+DATA_UPLOAD_MAX_MEMORY_SIZE = 512 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 512 * 1024
 
 
 # Application definition

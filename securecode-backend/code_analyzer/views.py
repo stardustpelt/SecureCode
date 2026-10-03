@@ -1,9 +1,11 @@
 from django.http import JsonResponse
+from django.core.exceptions import RequestDataTooBig
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
 import os
 import tempfile
+import time
 import uuid
 from analyzer.indentation_check import check_indentation
 from analyzer.security_check import check_security_vulnerabilities
@@ -29,6 +31,20 @@ def _report_path(name):
     if os.path.commonpath((reports_dir, report_path)) != reports_dir:
         raise ValueError('Invalid report path')
     return report_path
+
+def _cleanup_old_reports():
+    cutoff = time.time() - 24 * 60 * 60
+    try:
+        with os.scandir('reports') as entries:
+            for entry in entries:
+                try:
+                    if (entry.name.endswith('.pdf') and entry.is_file(follow_symlinks=False)
+                            and entry.stat(follow_symlinks=False).st_mtime < cutoff):
+                        os.unlink(entry.path)
+                except OSError:
+                    continue
+    except OSError:
+        return
 
 def _esc(text):
     return str(text).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
@@ -244,6 +260,8 @@ def analyze_code_api(request):
                 'filename': 'test'
             }
         })
+
+    _cleanup_old_reports()
     
     try:
         code_content = None
@@ -258,10 +276,16 @@ def analyze_code_api(request):
         elif request.body:
             data = json.loads(request.body)
             code_content = data.get('code')
+            if 'code' in data and not isinstance(code_content, str):
+                return JsonResponse({'error': 'Code must be a string.'}, status=400)
             filename = _safe_report_name(data.get('filename', 'api_code'))
         
+        if code_content is not None and not isinstance(code_content, str):
+            return JsonResponse({'error': 'Code must be a string.'}, status=400)
         if not code_content:
             return JsonResponse({'error': 'No code provided'}, status=400)
+        if len(code_content) > 200_000:
+            return JsonResponse({'error': 'Code exceeds the 200000 character limit.'}, status=413)
 
         report_id = uuid.uuid4().hex
         
@@ -318,8 +342,12 @@ def analyze_code_api(request):
         finally:
             os.unlink(temp_path)
             
+    except RequestDataTooBig:
+        return JsonResponse({'error': 'Request body exceeds the configured size limit.'}, status=413)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except (RecursionError, MemoryError, ValueError):
+        return JsonResponse({'error': 'Input could not be analyzed safely.'}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 

@@ -4,8 +4,11 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
+from unittest.mock import patch
 
 from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
 
@@ -98,3 +101,60 @@ class AnalyzeReportPathTests(TestCase):
 		)
 		self.assertNotEqual(result.returncode, 0)
 		self.assertIn('DJANGO_SECRET_KEY must be set', result.stderr)
+
+	def test_upload_memory_thresholds_are_512_kb(self):
+		self.assertEqual(settings.DATA_UPLOAD_MAX_MEMORY_SIZE, 512 * 1024)
+		self.assertEqual(settings.FILE_UPLOAD_MAX_MEMORY_SIZE, 512 * 1024)
+
+	def test_code_over_character_limit_returns_413(self):
+		response = self.client.post(
+			'/api/analyze/',
+			data=json.dumps({'code': 'x' * 200_001}),
+			content_type='application/json',
+		)
+		self.assertEqual(response.status_code, 413)
+
+	def test_non_string_code_returns_400(self):
+		response = self.client.post(
+			'/api/analyze/',
+			data=json.dumps({'code': ['not', 'source']}),
+			content_type='application/json',
+		)
+		self.assertEqual(response.status_code, 400)
+
+	def test_oversized_request_body_returns_413(self):
+		body = json.dumps({'code': 'x' * (512 * 1024)})
+		response = self.client.post('/api/analyze/', data=body, content_type='application/json')
+		self.assertEqual(response.status_code, 413)
+
+	def test_analysis_recursion_memory_and_value_errors_return_400(self):
+		for error_type in (RecursionError, MemoryError, ValueError):
+			with self.subTest(error=error_type.__name__):
+				with patch('code_analyzer.views.check_indentation', side_effect=error_type()):
+					response = self.client.post(
+						'/api/analyze/',
+						data=json.dumps({'code': 'value = 1'}),
+						content_type='application/json',
+					)
+				self.assertEqual(response.status_code, 400)
+
+	def test_old_reports_are_deleted_on_analysis_request(self):
+		reports_dir = self.work_dir / 'reports'
+		reports_dir.mkdir()
+		old_report = reports_dir / 'expired.pdf'
+		old_report.write_bytes(b'old report')
+		old_timestamp = time.time() - (24 * 60 * 60 + 1)
+		os.utime(old_report, (old_timestamp, old_timestamp))
+
+		response = self.client.post(
+			'/api/analyze/',
+			data=json.dumps({'code': 'value = 1'}),
+			content_type='application/json',
+		)
+		self.assertEqual(response.status_code, 200)
+		self.assertFalse(old_report.exists())
+
+	def test_uploaded_code_over_character_limit_returns_413(self):
+		uploaded = SimpleUploadedFile('large.py', b'x' * 200_001)
+		response = self.client.post('/api/analyze/', {'file': uploaded})
+		self.assertEqual(response.status_code, 413)
