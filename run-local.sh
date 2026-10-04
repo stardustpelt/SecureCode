@@ -2,8 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-BACKEND_DIR="$ROOT_DIR/securecode-backend"
-FRONTEND_DIR="$ROOT_DIR/securecode-ui"
+BACKEND_DIR="$ROOT_DIR/backend"
+FRONTEND_DIR="$ROOT_DIR/frontend"
 VENV_DIR="$BACKEND_DIR/.venv"
 LOCAL_HOST="127.0.0.1"
 KILL_PORTS=false
@@ -72,13 +72,13 @@ if [[ ! -x "$VENV_DIR/bin/python" ]]; then
     python3 -m venv "$VENV_DIR"
 fi
 
-source "$VENV_DIR/bin/activate"
-printf 'Using Python environment: %s\n' "$VIRTUAL_ENV"
+PYTHON="$VENV_DIR/bin/python"
+printf 'Using Python environment: %s\n' "$VENV_DIR"
 
 export DJANGO_DEBUG=1
-export DJANGO_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')"
+export DJANGO_SECRET_KEY="$("$PYTHON" -c 'import secrets; print(secrets.token_urlsafe(50))')"
 
-python -m pip install -r "$BACKEND_DIR/requirements.txt"
+"$PYTHON" -m pip install -r "$BACKEND_DIR/requirements.txt"
 
 if ! command -v npm >/dev/null 2>&1; then
     printf 'Error: npm is required but was not found in PATH.\n' >&2
@@ -89,7 +89,7 @@ if [[ ! -x "$FRONTEND_DIR/node_modules/.bin/react-scripts" ]]; then
     npm install --prefix "$FRONTEND_DIR"
 fi
 
-python "$BACKEND_DIR/manage.py" migrate --noinput
+"$PYTHON" "$BACKEND_DIR/manage.py" migrate --noinput
 
 cleanup() {
     if [[ -n "${BACKEND_PID:-}" ]]; then
@@ -107,7 +107,7 @@ trap 'exit 143' TERM
 
 (
     cd "$BACKEND_DIR"
-    exec python manage.py runserver "$LOCAL_HOST:8000"
+    exec "$PYTHON" manage.py runserver "$LOCAL_HOST:8000"
 ) &
 BACKEND_PID=$!
 

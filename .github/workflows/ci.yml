@@ -7,9 +7,6 @@ on:
 jobs:
   django-tests:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        backend: [securecode-backend, securecode-api]
     env:
       DJANGO_DEBUG: "1"
       DJANGO_SECRET_KEY: ci-test-only-not-a-secret
@@ -20,10 +17,10 @@ jobs:
           python-version: "3.14"
       - name: Install backend dependencies
         run: python -m pip install -r requirements.txt
-        working-directory: ${{ matrix.backend }}
+        working-directory: backend
       - name: Run Django tests
         run: python manage.py test
-        working-directory: ${{ matrix.backend }}
+        working-directory: backend
 
   bandit:
     runs-on: ubuntu-latest
@@ -35,7 +32,7 @@ jobs:
       - name: Install Bandit
         run: python -m pip install bandit==1.9.4
       - name: Scan Python code
-        run: bandit -r securecode-backend securecode-api -x '*/tests.py'
+        run: bandit -r backend -x '*/tests.py'
 
   frontend-build:
     runs-on: ubuntu-latest
@@ -45,7 +42,7 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: securecode-ui/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
       - name: Install and build UI
         run: npm ci && npm run build
-        working-directory: securecode-ui
+        working-directory: frontend

@@ -1,5 +1,5 @@
 {
-  "name": "securecode-ui",
+  "name": "securecode-frontend",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

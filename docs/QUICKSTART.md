@@ -12,15 +12,15 @@ From the repository root, run:
 ./run-local.sh
 ```
 
-On first run, this creates `securecode-backend/.venv`, installs backend and React dependencies, applies migrations, and starts both servers bound to `127.0.0.1`. Open http://127.0.0.1:3000/; the API is at http://127.0.0.1:8000/api/. Press `Ctrl+C` to stop both servers. This launcher is local-machine-only.
+On first run, this creates `backend/.venv`, installs backend and React dependencies, applies migrations, and starts both servers bound to `127.0.0.1`. Open http://127.0.0.1:3000/; the API is at http://127.0.0.1:8000/api/. Press `Ctrl+C` to stop both servers. This launcher is local-machine-only.
 
 The launcher enables Django debug mode only for this local run and generates a fresh random secret key in memory for that process. It does not write the key to disk. Both settings files default to `DEBUG=False`; outside the launcher, set `DJANGO_SECRET_KEY` before starting Django or startup will fail. See the root `.env.example` for the supported environment variables. Django does not load that file automatically; source your local `.env` or export the values in your shell.
 
 Use `./run-local.sh --help` to see launcher options. If a required port is occupied, `./run-local.sh --kill-ports` stops the process using ports 3000 and 8000 before startup.
 
-## API Only
+## Backend API
 
-Configure the required settings before starting the API. For example, from `securecode-api`:
+To run the full-featured API without the React frontend, configure the required settings from `backend/`:
 
 ```bash
 export DJANGO_SECRET_KEY='replace-with-a-fresh-random-secret'
@@ -30,7 +30,7 @@ export DJANGO_DEBUG=0
 Set `DJANGO_ALLOWED_HOSTS` and `DJANGO_CORS_ORIGINS` as needed for your deployment. Their local defaults are `127.0.0.1,localhost` and `http://127.0.0.1:3000,http://localhost:3000` respectively. Do not use debug mode or the example placeholder secret in production.
 
 ```bash
-cd securecode-api
+cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
@@ -53,4 +53,4 @@ python3 cli.py path/to/file.py
 python3 cli.py path/to/project
 ```
 
-The full scanner CLI also accepts JSON/PDF output, multiple paths, and standard input. See [CLI Documentation](CLI_DOCUMENTATION.md) for options. The separate `securecode-api/cli.py` checks syntax and indentation only; the root CLI and `securecode-backend/cli.py` also run security-pattern and code-quality checks.
+The full scanner CLI also accepts JSON/PDF output, multiple paths, and standard input. See [CLI Documentation](CLI_DOCUMENTATION.md) for options. The root CLI and `backend/cli.py` run syntax, security-pattern, and code-quality checks.

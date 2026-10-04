@@ -1,6 +1,6 @@
 # CLI Guide
 
-The repository-root CLI and `securecode-backend/cli.py` run the full backend's syntax, security-pattern, and code-quality checks. They do not call the API or execute checked code. The separate `securecode-api/cli.py` remains syntax/indentation-only.
+The repository-root CLI and `backend/cli.py` run the backend's syntax, security-pattern, and code-quality checks. They do not call the API or execute checked code.
 
 Run from the repository root to scan a file or recursively scan a folder:
 

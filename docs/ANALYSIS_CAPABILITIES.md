@@ -1,22 +1,20 @@
 # Analysis Capabilities
 
-This page describes the current scanners and their entry points. SecureCode has two APIs and two CLI tools; coverage and output formats differ by entry point.
+This page describes the current scanner and its entry points.
 
 ## Entry points
 
 | Entry point | Checks | Output | Executes submitted code? |
 | --- | --- | --- | --- |
-| `securecode-backend` API | Syntax/indentation, security patterns, and code-quality heuristics | JSON response, text report, and PDF report | No |
-| `securecode-api` API | Syntax/indentation, security patterns, and code-quality heuristics | JSON response, text report, and PDF report | No |
+| `backend` API | Syntax/indentation, security patterns, and code-quality heuristics | JSON response, text report, and PDF report | No |
 | Root `python3 cli.py PATH` | Full-backend syntax, security-pattern, and code-quality checks | Text by default; JSON or PDF with `--format` or matching output extension | No |
-| `securecode-backend/cli.py PATH` | Same checks and formats as the root CLI | Text, JSON, or PDF | No |
-| `securecode-api/cli.py PATH` | Syntax and indentation only | Text report | No |
+| `backend/cli.py PATH` | Same checks and formats as the root CLI | Text, JSON, or PDF | No |
 
-Both API endpoints accept Python source as JSON or as a `.py` file upload, and neither executes submitted code. Responses include a status, report text, filename, and generated `report_id`; field names and clean/error response details differ slightly between the two backends. The full backend returns `has_errors`, `error_count`, and `errors` for clean and flagged submissions. The API-only backend uses `errors` for flagged submissions and may omit it for a clean result. Both generate a PDF report for each accepted analysis. Reports are stored locally; PDFs older than 24 hours are removed when a later analysis request triggers cleanup.
+The API accepts Python source as JSON or as a `.py` file upload and does not execute submitted code. Responses include a status, report text, filename, and generated `report_id`, plus `has_errors`, `error_count`, and `errors` for clean and flagged submissions. A PDF report is generated for each accepted analysis. Reports are stored locally; PDFs older than 24 hours are removed when a later analysis request triggers cleanup.
 
 The analysis endpoint limits source to 200,000 characters, in addition to Django's request-body size limit. The local launcher binds the API to `127.0.0.1`. The API endpoint has no user authentication and is CSRF-exempt, so do not expose it to a shared network or the public internet without adding and reviewing access controls.
 
-The root and full-backend CLIs accept one or more `.py` files, directories scanned recursively, or `-` for standard input. Findings from selected files are combined into one report. CLI exit status is `1` when findings or path errors exist and `0` when the scan completes without findings. The `--quiet` option suppresses the report only when there are no findings.
+The root and backend CLIs accept one or more `.py` files, directories scanned recursively, or `-` for standard input. Findings from selected files are combined into one report. CLI exit status is `1` when findings or path errors exist and `0` when the scan completes without findings. The `--quiet` option suppresses the report only when there are no findings.
 
 Example:
 
@@ -28,7 +26,7 @@ python3 cli.py ./samples -o findings.pdf
 
 ## Full scanner checks
 
-The APIs and full-backend CLIs combine AST-based syntax/indentation parsing with the security and quality rules maintained under `securecode-backend/analyzer/`.
+The API and CLIs combine AST-based syntax/indentation parsing with the security and quality rules maintained under `backend/analyzer/`.
 
 | Severity | Current security checks |
 | --- | --- |
@@ -38,8 +36,6 @@ The APIs and full-backend CLIs combine AST-based syntax/indentation parsing with
 | Low | TODO/FIXME/HACK/XXX comments; syntax and indentation findings; several code-quality checks listed below |
 
 Code-quality checks include bare `except:`, empty exception handlers, mutable list/dictionary defaults, old Python/deprecated APIs (`print` statement, `urllib.urlopen`, `assertEquals`), apparent unused variables, missing function/class docstrings, lines over 120 characters, semicolon-separated statements, explicit comparisons with `True`/`False`, direct `type()` comparisons, and upload-handling heuristics for missing nearby size/type validation around `request.FILES`.
-
-The API-only project reuses the full backend's checker modules from the sibling `securecode-backend/analyzer/` directory. Keep both backend directories present when running this API from the repository checkout.
 
 ## Limitations
 
@@ -53,4 +49,4 @@ Examples the current rules do not reliably detect:
 - Upload validation implemented without a nearby `request.FILES` reference.
 - An unescaped template interpolation such as `{{ username }}` by itself.
 
-The APIs and full-backend CLI use the full scanner. The API-only CLI remains syntax/indentation-only, even though the API-only web endpoint now uses the full checker set.
+The API and CLI use the full scanner.

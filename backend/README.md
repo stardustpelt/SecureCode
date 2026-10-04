@@ -1,6 +1,6 @@
 # Full Backend
 
-This Django backend provides the API and CLI, plus pattern-based security and code-quality checks and a static HTML UI. The React UI lives in `../securecode-ui/`.
+This Django backend provides the API and CLI, plus pattern-based security and code-quality checks and a static HTML UI. The React frontend lives in `../frontend/`.
 
 From the repository root, run `./run-local.sh` to install dependencies in local environments, apply migrations, and start both services bound to `127.0.0.1`. Open http://127.0.0.1:3000/; the API is at http://127.0.0.1:8000/api/. This launcher is for the same computer only; the React client is not configured for LAN access.
 
