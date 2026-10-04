@@ -1,14 +1,22 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
+# Python virtual environments
 .venv/
 venv/
 env/
 ENV/
+
+# Python caches and test environments
+__pycache__/
+*.py[cod]
+*$py.class
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.tox/
+.nox/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
 *.egg-info/
 
 # Local databases and generated runtime files
