@@ -64,8 +64,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -185,5 +185,9 @@ CORS_ALLOWED_ORIGINS = [
         'http://127.0.0.1:3000,http://localhost:3000',
     ).split(',')
     if origin.strip()
+]
+CORS_ALLOWED_ORIGINS.append('https://secure-code-ten.vercel.app')
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^https://secure-code-[a-z0-9-]+\.vercel\.app$',
 ]
 CORS_ALLOW_CREDENTIALS = False

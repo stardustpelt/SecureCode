@@ -85,8 +85,35 @@ class AnalyzeReportPathTests(TestCase):
 		self.assertNotIn('*', settings.ALLOWED_HOSTS)
 		self.assertFalse(settings.CORS_ALLOW_ALL_ORIGINS)
 		self.assertFalse(settings.CORS_ALLOW_CREDENTIALS)
+		self.assertLess(
+			settings.MIDDLEWARE.index('corsheaders.middleware.CorsMiddleware'),
+			settings.MIDDLEWARE.index('django.middleware.common.CommonMiddleware'),
+		)
 		self.assertFalse(any('*' in origin for origin in settings.CORS_ALLOWED_ORIGINS))
 		self.assertFalse(any('*' in origin for origin in settings.CSRF_TRUSTED_ORIGINS))
+		self.assertIn('https://secure-code-ten.vercel.app', settings.CORS_ALLOWED_ORIGINS)
+
+	def test_cors_allows_securecode_vercel_site_and_previews_only(self):
+		allowed_origins = (
+			'https://secure-code-ten.vercel.app',
+			'https://secure-code-git-feature-user.vercel.app',
+		)
+		for origin in allowed_origins:
+			with self.subTest(origin=origin):
+				response = self.client.options(
+					'/api/analyze/',
+					HTTP_ORIGIN=origin,
+					HTTP_ACCESS_CONTROL_REQUEST_METHOD='POST',
+				)
+				self.assertEqual(response['Access-Control-Allow-Origin'], origin)
+
+		blocked_origin = 'https://unrelated-project.vercel.app'
+		response = self.client.options(
+			'/api/analyze/',
+			HTTP_ORIGIN=blocked_origin,
+			HTTP_ACCESS_CONTROL_REQUEST_METHOD='POST',
+		)
+		self.assertNotIn('Access-Control-Allow-Origin', response)
 
 	def test_production_settings_require_a_secret_key(self):
 		environment = os.environ.copy()
@@ -146,7 +173,7 @@ class AnalyzeReportPathTests(TestCase):
 		)
 		self.assertEqual(result.returncode, 0, result.stderr)
 		self.assertIn("['securecode-api.onrender.com']", result.stdout)
-		self.assertIn("['https://securecode.vercel.app']", result.stdout)
+		self.assertIn('https://securecode.vercel.app', result.stdout)
 		self.assertIn('django.db.backends.postgresql', result.stdout)
 
 	def test_upload_memory_thresholds_are_512_kb(self):
