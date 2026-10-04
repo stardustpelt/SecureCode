@@ -103,6 +103,52 @@ class AnalyzeReportPathTests(TestCase):
 		self.assertNotEqual(result.returncode, 0)
 		self.assertIn('DJANGO_SECRET_KEY must be set', result.stderr)
 
+	def test_production_settings_require_a_database_url(self):
+		environment = os.environ.copy()
+		environment['DJANGO_DEBUG'] = '0'
+		environment['DJANGO_SECRET_KEY'] = 'test-only-production-key'
+		environment['RENDER_EXTERNAL_HOSTNAME'] = 'securecode-api.onrender.com'
+		environment.pop('DATABASE_URL', None)
+		project_dir = Path(__file__).resolve().parents[1]
+		result = subprocess.run(
+			[sys.executable, '-c', 'import securecode_web.settings'],
+			cwd=project_dir,
+			env=environment,
+			capture_output=True,
+			text=True,
+		)
+		self.assertNotEqual(result.returncode, 0)
+		self.assertIn('DATABASE_URL must be set', result.stderr)
+
+	def test_render_hostname_and_explicit_cors_origin_are_loaded(self):
+		environment = os.environ.copy()
+		environment.update({
+			'DJANGO_DEBUG': '0',
+			'DJANGO_SECRET_KEY': 'test-only-production-key',
+			'RENDER_EXTERNAL_HOSTNAME': 'securecode-api.onrender.com',
+			'DATABASE_URL': 'postgresql://user:pass@localhost:5432/securecode',
+			'DJANGO_CORS_ORIGINS': 'https://securecode.vercel.app',
+		})
+		environment.pop('DJANGO_ALLOWED_HOSTS', None)
+		project_dir = Path(__file__).resolve().parents[1]
+		result = subprocess.run(
+			[
+				sys.executable,
+				'-c',
+				('from django.conf import settings; '
+				 'print(settings.ALLOWED_HOSTS, settings.CORS_ALLOWED_ORIGINS, '
+				 'settings.DATABASES["default"]["ENGINE"])'),
+			],
+			cwd=project_dir,
+			env=environment,
+			capture_output=True,
+			text=True,
+		)
+		self.assertEqual(result.returncode, 0, result.stderr)
+		self.assertIn("['securecode-api.onrender.com']", result.stdout)
+		self.assertIn("['https://securecode.vercel.app']", result.stdout)
+		self.assertIn('django.db.backends.postgresql', result.stdout)
+
 	def test_upload_memory_thresholds_are_512_kb(self):
 		self.assertEqual(settings.DATA_UPLOAD_MAX_MEMORY_SIZE, 512 * 1024)
 		self.assertEqual(settings.FILE_UPLOAD_MAX_MEMORY_SIZE, 512 * 1024)

@@ -43,3 +43,4 @@ The analysis endpoint has no user authentication. Keep it on loopback; do not ex
 - [Quick Start](docs/QUICKSTART.md): run the full app or backend API
 - [Analysis Capabilities](docs/ANALYSIS_CAPABILITIES.md): checks, backend differences, and limitations
 - [CLI Guide](docs/CLI_DOCUMENTATION.md): local file checks
+- [Render Deployment](docs/RENDER_DEPLOYMENT.md): deploy the backend API

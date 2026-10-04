@@ -38,7 +38,7 @@ python manage.py migrate
 python manage.py runserver 127.0.0.1:8000
 ```
 
-Check the API with `curl http://127.0.0.1:8000/api/health/`. The API-only setup is intended for local use. Keep it bound to `127.0.0.1`; do not bind it to a network interface or expose it to other devices because the analysis endpoint has no user authentication.
+Check the API with `curl http://127.0.0.1:8000/api/health/`. The manual API setup is intended for local use. Keep it bound to `127.0.0.1`; do not bind it to a network interface or expose it to other devices because the analysis endpoint has no user authentication.
 
 The analysis endpoint is `POST /api/analyze/`; it accepts JSON with a `code` string and optional `filename`, or a `.py` file upload. Reports can be downloaded with `GET /api/report/<report_id>/?download=true`. The endpoint has no user authentication and is CSRF-exempt. Keep it bound to loopback; do not expose it to a shared network or the public internet without adding and reviewing access controls.
 
@@ -54,3 +54,5 @@ python3 cli.py path/to/project
 ```
 
 The full scanner CLI also accepts JSON/PDF output, multiple paths, and standard input. See [CLI Documentation](CLI_DOCUMENTATION.md) for options. The root CLI and `backend/cli.py` run syntax, security-pattern, and code-quality checks.
+
+For a hosted deployment, see [Render Deployment](RENDER_DEPLOYMENT.md).
