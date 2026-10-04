@@ -113,7 +113,7 @@ BACKEND_PID=$!
 
 (
     cd "$FRONTEND_DIR"
-    exec env BROWSER=none HOST="$LOCAL_HOST" PORT=3000 ./node_modules/.bin/react-scripts start
+    exec env REACT_APP_API_BASE_URL="http://$LOCAL_HOST:8000" BROWSER=none HOST="$LOCAL_HOST" PORT=3000 ./node_modules/.bin/react-scripts start
 ) &
 FRONTEND_PID=$!
 

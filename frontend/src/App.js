@@ -9,8 +9,7 @@ import './index.css';
 import Documentation from './Documentation';
 import About from './About';
 import Layout from './components/Layout';
-
-const API_BASE = 'http://127.0.0.1:8000/api';
+import { getReportDownloadUrl, scanCode, scanFile } from './services/api';
 
 function SeverityBadge({ level }) {
   const map = {
@@ -58,25 +57,15 @@ function App() {
     setReport(null);
     setReportId(null);
     try {
-      let response;
-      if (file) {
-        const fd = new FormData();
-        fd.append('file', file);
-        response = await fetch(`${API_BASE}/analyze/`, { method: 'POST', body: fd });
-      } else {
-        response = await fetch(`${API_BASE}/analyze/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, filename: 'web_code' }),
-        });
-      }
-      const result = await response.json();
+      const result = file
+        ? await scanFile(file)
+        : await scanCode({ code, filename: 'web_code' });
       setReport(result);
       setReportId(result.report_id);
     } catch (err) {
       setReport({
         status: 'error', has_errors: true,
-        report: `Connection failed. Make sure the server is running:\npython3 manage.py runserver 127.0.0.1:8000\n\nError: ${err.message}`,
+        report: `Analysis request failed.\n\n${err.message}`,
       });
     } finally {
       setAnalyzing(false);
@@ -84,7 +73,7 @@ function App() {
   };
 
   const downloadReport = () => {
-    if (reportId) window.location.href = `${API_BASE}/report/${reportId}/?download=true`;
+    if (reportId) window.location.href = getReportDownloadUrl(reportId);
   };
 
   const getSeverityStats = () => {
