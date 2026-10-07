@@ -93,6 +93,10 @@ export default function Analyzer({ onNavigate }) {
     return 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20';
   };
 
+  // Extract issues array safely from API response (supporting 'errors' or 'issues')
+  const issuesList = report?.errors || report?.issues || [];
+  const totalIssuesCount = report?.error_count ?? report?.total_issues ?? issuesList.length;
+
   return (
     <div className="page-bg flex flex-col min-h-screen">
       <Navbar currentPage="app" onNavigate={onNavigate} />
@@ -253,7 +257,7 @@ export default function Analyzer({ onNavigate }) {
                   <div className="flex items-center gap-2 font-mono text-xs text-[var(--muted)] mb-1">
                     <span>Report ID: {report.report_id || report.id || 'SEC-SCAN-01'}</span>
                     <span>•</span>
-                    <span>{report.filename || 'source.py'}</span>
+                    <span>{report.filename || selectedFile?.name || 'source.py'}</span>
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold">Analysis Results</h2>
                 </div>
@@ -275,39 +279,50 @@ export default function Analyzer({ onNavigate }) {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="p-4 rounded-xl stat-card-red space-y-1">
                   <span className="text-[10px] font-mono font-bold uppercase text-[var(--muted)]">Critical / High</span>
-                  <p className="text-2xl font-black">{report.summary?.critical || report.critical_count || 0}</p>
+                  <p className="text-2xl font-black">
+                    {issuesList.filter(i => ['critical', 'high'].includes(i.severity?.toLowerCase())).length}
+                  </p>
                 </div>
                 <div className="p-4 rounded-xl stat-card-amber space-y-1">
                   <span className="text-[10px] font-mono font-bold uppercase text-[var(--muted)]">Medium Risk</span>
-                  <p className="text-2xl font-black">{report.summary?.medium || report.medium_count || 0}</p>
+                  <p className="text-2xl font-black">
+                    {issuesList.filter(i => i.severity?.toLowerCase() === 'medium').length}
+                  </p>
                 </div>
                 <div className="p-4 rounded-xl stat-card-teal space-y-1">
                   <span className="text-[10px] font-mono font-bold uppercase text-[var(--muted)]">Low / Quality</span>
-                  <p className="text-2xl font-black">{report.summary?.low || report.low_count || 0}</p>
+                  <p className="text-2xl font-black">
+                    {issuesList.filter(i => !i.severity || ['low', 'n/a'].includes(i.severity?.toLowerCase())).length}
+                  </p>
                 </div>
                 <div className="p-4 rounded-xl glass-panel space-y-1">
                   <span className="text-[10px] font-mono font-bold uppercase text-[var(--muted)]">Total Issues</span>
-                  <p className="text-2xl font-black">{report.issues?.length || report.total_issues || 0}</p>
+                  <p className="text-2xl font-black">{totalIssuesCount}</p>
                 </div>
               </div>
 
               {/* Issues List */}
               <div className="space-y-3 pt-2">
                 <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--muted)]">Detailed Findings</h3>
-                {report.issues && report.issues.length > 0 ? (
+                {issuesList.length > 0 ? (
                   <div className="space-y-3">
-                    {report.issues.map((issue, idx) => (
+                    {issuesList.map((issue, idx) => (
                       <div key={idx} className="p-4 rounded-xl bg-[var(--surface-raised)] border border-[var(--line)] space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getSeverityBadge(issue.severity)}`}>
                               {issue.severity || 'Warning'}
                             </span>
-                            <span className="font-mono text-xs font-bold">Line {issue.line || 'N/A'}: {issue.title || issue.rule_id}</span>
+                            <span className="font-mono text-xs font-bold">Line {issue.line || 'N/A'}: {issue.type || issue.title || issue.rule}</span>
                           </div>
                           <span className="text-xs font-mono text-[var(--muted)]">{issue.category || 'Security'}</span>
                         </div>
-                        <p className="text-xs text-[var(--muted)] leading-relaxed">{issue.description || issue.message}</p>
+                        <p className="text-xs text-[var(--muted)] leading-relaxed">{issue.message || issue.description}</p>
+                        {issue.code && (
+                          <div className="p-2 rounded bg-black/30 font-mono text-[11px] text-emerald-400 overflow-x-auto">
+                            <code>{issue.code}</code>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
