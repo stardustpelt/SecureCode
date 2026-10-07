@@ -87,6 +87,8 @@ code, pre, textarea.code-input { font-family: var(--mono); }
 .page-bg > main {
   width: min(100% - 40px, 1280px);
   max-width: 1280px;
+  margin-left: auto;   /* <--- Add this */
+  margin-right: auto;  /* <--- Add this */
   padding: 48px 0 72px;
 }
 .page-bg > footer { border-color: var(--line); }
