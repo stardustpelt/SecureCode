@@ -1,7 +1,7 @@
 // src/pages/Analyzer.jsx
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, Upload, FileCode, AlertTriangle, ShieldCheck, Download, RefreshCw, CheckCircle2, XCircle, Info } from 'lucide-react';
+import { Terminal, Upload, FileCode, ShieldCheck, Download, RefreshCw, XCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { scanCode, scanFile, getReportDownloadUrl } from '../services/api';

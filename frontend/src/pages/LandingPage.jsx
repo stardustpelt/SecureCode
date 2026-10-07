@@ -1,7 +1,7 @@
 // src/pages/LandingPage.jsx
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Terminal, ArrowRight, CheckCircle2, Lock, Cpu, FileCode2 } from 'lucide-react';
+import { Shield, Terminal, ArrowRight, CheckCircle2, Lock, FileCode2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
