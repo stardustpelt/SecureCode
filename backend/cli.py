@@ -104,48 +104,105 @@ def format_text(findings, scanned_files):
 
 def write_pdf(findings, scanned_files, output_path):
     from reportlab.lib import colors
-    from reportlab.lib.enums import TA_LEFT
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import mm
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Preformatted
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, HRFlowable
 
+    doc = SimpleDocTemplate(
+        str(output_path),
+        pagesize=A4,
+        rightMargin=15*mm, leftMargin=15*mm,
+        topMargin=15*mm, bottomMargin=15*mm
+    )
+    W = A4[0] - 30*mm
     styles = getSampleStyleSheet()
-    body_style = ParagraphStyle('FindingBody', parent=styles['BodyText'], fontSize=9, leading=12, alignment=TA_LEFT)
-    code_style = ParagraphStyle('FindingCode', parent=styles['Code'], fontSize=8, leading=10, wordWrap='CJK')
-    story = [
-        Paragraph('SecureCode Analysis Report', styles['Title']),
-        Paragraph(f'Files scanned: {len(scanned_files)} &nbsp; | &nbsp; Total findings: {len(findings)}', body_style),
-        Spacer(1, 5 * mm),
-    ]
-    if findings:
-        for number, finding in enumerate(findings, 1):
-            story.append(Paragraph(
-                f"{number}. {escape(str(finding['type']))} [{escape(str(finding['severity']))}]",
-                styles['Heading2'],
-            ))
-            details = [
-                ['File', Paragraph(escape(str(finding['file'])), body_style)],
-                ['Line', str(finding.get('line', 0))],
-                ['Description', Paragraph(escape(str(finding.get('message', ''))), body_style)],
-                ['Code', Preformatted(escape(str(finding.get('code', ''))), code_style)],
-                ['Recommendation', Paragraph(escape(str(finding.get('suggestion', ''))), body_style)],
-            ]
-            table = Table(details, colWidths=[28 * mm, 150 * mm], hAlign='LEFT')
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#eeeeee')),
-                ('GRID', (0, 0), (-1, -1), 0.4, colors.HexColor('#b8b8b8')),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('LEFTPADDING', (0, 0), (-1, -1), 6),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-                ('TOPPADDING', (0, 0), (-1, -1), 5),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-            ]))
-            story.extend([table, Spacer(1, 4 * mm)])
-    else:
-        story.append(Paragraph('No findings detected.', body_style))
 
-    SimpleDocTemplate(str(output_path), pagesize=A4).build(story)
+    title_style = ParagraphStyle('DocTitle', parent=styles['Normal'],
+                                 fontName='Helvetica-Bold', fontSize=18,
+                                 textColor=colors.HexColor('#0f172a'), spaceAfter=2)
+    meta_style = ParagraphStyle('MetaText', parent=styles['Normal'],
+                                fontName='Helvetica', fontSize=9, leading=13,
+                                textColor=colors.HexColor('#64748b'))
+    section_title = ParagraphStyle('SectionHeading', parent=styles['Normal'],
+                                   fontName='Helvetica-Bold', fontSize=12,
+                                   textColor=colors.HexColor('#1e293b'), spaceBefore=10, spaceAfter=4)
+    body_style = ParagraphStyle('BodyTextCustom', parent=styles['Normal'],
+                                fontName='Helvetica', fontSize=9.5, leading=14,
+                                textColor=colors.HexColor('#334155'))
+    code_style = ParagraphStyle('CodeSnippet', parent=styles['Normal'],
+                                fontName='Courier', fontSize=8.5, leading=11,
+                                textColor=colors.HexColor('#e11d48'))
+    fix_style = ParagraphStyle('FixText', parent=styles['Normal'],
+                                fontName='Helvetica-Bold', fontSize=9, leading=13,
+                                textColor=colors.HexColor('#059669'))
+
+    story = []
+
+    # 1. Executive Header Banner
+    story.append(Paragraph('🛡 SECURECODE CLI ASSESSMENT REPORT', title_style))
+    story.append(Spacer(1, 2))
+    story.append(Paragraph(f'<b>Files Scanned:</b> {len(scanned_files)} &nbsp;&bull;&nbsp; <b>Total Findings:</b> {len(findings)}', meta_style))
+    story.append(Spacer(1, 6))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#cbd5e1'), spaceAfter=12))
+
+    # 2. Detailed Findings / Threat Cards
+    if findings:
+        story.append(Paragraph('Detailed Findings & Remediation Case Files', section_title))
+        story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#e2e8f0'), spaceAfter=8))
+
+        for number, finding in enumerate(findings, 1):
+            severity = str(finding.get('severity', 'LOW')).upper()
+            sev_color = '#e11d48' if severity in ['HIGH', 'CRITICAL'] else ('#d97706' if severity == 'MEDIUM' else '#059669')
+            
+            card_content = []
+            
+            # Header line
+            header_html = f"<b>#{number} // {escape(str(finding.get('type', 'Violation')))}</b> &nbsp;&bull;&nbsp; Line {escape(str(finding.get('line', 0)))} &nbsp;&bull;&nbsp; <font color='{sev_color}'><b>[{severity}]</b></font>"
+            card_content.append(Paragraph(header_html, body_style))
+            card_content.append(Spacer(1, 4))
+            
+            # File and Description
+            card_content.append(Paragraph(f"<b>File:</b> {escape(str(finding.get('file', '')))}", body_style))
+            card_content.append(Spacer(1, 2))
+            card_content.append(Paragraph(escape(str(finding.get('message', ''))), body_style))
+            
+            # Code snippet box
+            if finding.get('code'):
+                card_content.append(Spacer(1, 4))
+                snippet_html = f"<b>Snippet:</b> <code>{escape(str(finding.get('code')))}</code>"
+                card_content.append(Paragraph(snippet_html, code_style))
+
+            # Recommendation / Fix
+            if finding.get('suggestion'):
+                card_content.append(Spacer(1, 4))
+                fix_html = f"<b>Remediation:</b> {escape(str(finding.get('suggestion')))}"
+                card_content.append(Paragraph(fix_html, fix_style))
+
+            # Wrap into individual styled threat card table
+            finding_table = Table([[card_content]], colWidths=[W])
+            finding_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#ffffff')),
+                ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#cbd5e1')),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+            ]))
+            
+            story.append(KeepTogether([finding_table, Spacer(1, 8)]))
+    else:
+        story.append(Paragraph('Assessment Outcome', section_title))
+        story.append(Spacer(1, 4))
+        story.append(Paragraph('✅ <b>No security vulnerabilities or code quality issues detected.</b>', body_style))
+
+    # Footer
+    story.append(Spacer(1, 10))
+    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor('#cbd5e1'), spaceAfter=6))
+    footer_style = ParagraphStyle('FooterText', parent=styles['Normal'], fontName='Helvetica', fontSize=8, textColor=colors.HexColor('#64748b'), alignment=1)
+    story.append(Paragraph('SecureCode — Python Security &amp; Code Quality Analyzer | Copyright © 2025 noob_sandip.', footer_style))
+
+    doc.build(story)
 
 
 def main(argv=None):

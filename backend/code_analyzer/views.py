@@ -14,7 +14,7 @@ from analyzer.low_severity_check import check_low_severity_issues
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, HRFlowable
 from reportlab.lib.units import mm
 import io
 
@@ -52,25 +52,8 @@ def _cleanup_old_reports():
 def _esc(text):
     return str(text).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
-def _table_style(header_bg=colors.HexColor('#2d2d2d')):
-    return TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), header_bg),
-        ('TEXTCOLOR',  (0, 0), (-1, 0), colors.white),
-        ('FONTNAME',   (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE',   (0, 0), (-1, 0), 9),
-        ('FONTNAME',   (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE',   (0, 1), (-1, -1), 8),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#f5f5f5'), colors.white]),
-        ('GRID',       (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
-        ('VALIGN',     (0, 0), (-1, -1), 'TOP'),
-        ('TOPPADDING', (0, 0), (-1, -1), 5),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-        ('LEFTPADDING',  (0, 0), (-1, -1), 6),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-    ])
-
 def generate_pdf_report(report_text, report_path, errors=None, filename='', code_output=None):
-    """Build a structured PDF report with real tables."""
+    """Build a professional cybersecurity case file PDF report with structured threat cards."""
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4,
                             leftMargin=15*mm, rightMargin=15*mm,
@@ -78,108 +61,133 @@ def generate_pdf_report(report_text, report_path, errors=None, filename='', code
     styles = getSampleStyleSheet()
     W = A4[0] - 30*mm
 
-    title_style = ParagraphStyle('title', parent=styles['Normal'],
-                                 fontName='Helvetica-Bold', fontSize=16,
-                                 textColor=colors.HexColor('#1a1a2e'), spaceAfter=4)
-    heading_style = ParagraphStyle('heading', parent=styles['Normal'],
-                                   fontName='Helvetica-Bold', fontSize=11,
-                                   textColor=colors.white, spaceAfter=2)
-    normal = ParagraphStyle('normal', parent=styles['Normal'],
-                            fontName='Helvetica', fontSize=9, leading=13)
-    mono = ParagraphStyle('mono', parent=styles['Normal'],
-                          fontName='Courier', fontSize=8, leading=11,
-                          backColor=colors.HexColor('#f0f0f0'))
-    footer_style = ParagraphStyle('footer', parent=styles['Normal'],
-                                  fontName='Helvetica', fontSize=8,
-                                  textColor=colors.grey, alignment=1)
-
-    def section_header(text):
-        tbl = Table([[Paragraph(text, heading_style)]], colWidths=[W])
-        tbl.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#2d2d2d')),
-            ('TOPPADDING', (0,0), (-1,-1), 6),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-            ('LEFTPADDING', (0,0), (-1,-1), 8),
-        ]))
-        return tbl
+    title_style = ParagraphStyle('DocTitle', parent=styles['Normal'],
+                                 fontName='Helvetica-Bold', fontSize=18,
+                                 textColor=colors.HexColor('#0f172a'), spaceAfter=2)
+    meta_style = ParagraphStyle('MetaText', parent=styles['Normal'],
+                                fontName='Helvetica', fontSize=9, leading=13,
+                                textColor=colors.HexColor('#64748b'))
+    section_title = ParagraphStyle('SectionHeading', parent=styles['Normal'],
+                                   fontName='Helvetica-Bold', fontSize=12,
+                                   textColor=colors.HexColor('#1e293b'), spaceBefore=10, spaceAfter=4)
+    body_style = ParagraphStyle('BodyTextCustom', parent=styles['Normal'],
+                                fontName='Helvetica', fontSize=9.5, leading=14,
+                                textColor=colors.HexColor('#334155'))
+    code_style = ParagraphStyle('CodeSnippet', parent=styles['Normal'],
+                                fontName='Courier', fontSize=8.5, leading=11,
+                                textColor=colors.HexColor('#e11d48'))
+    fix_style = ParagraphStyle('FixText', parent=styles['Normal'],
+                                fontName='Helvetica-Bold', fontSize=9, leading=13,
+                                textColor=colors.HexColor('#059669'))
 
     story = []
-    story.append(Paragraph('🛡 SecureCode Analysis Report', title_style))
-    story.append(Paragraph(f'File: <b>{_esc(filename)}.py</b>', normal))
-    story.append(Spacer(1, 6*mm))
 
+    # 1. Executive Header Banner
+    story.append(Paragraph('🛡 SECURECODE VULNERABILITY ASSESSMENT', title_style))
+    story.append(Spacer(1, 2))
+    story.append(Paragraph(f'<b>Target File:</b> {_esc(filename)}.py &nbsp;&bull;&nbsp; <b>Engine:</b> AST Static Analysis', meta_style))
+    story.append(Spacer(1, 6))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#cbd5e1'), spaceAfter=12))
+
+    # 2. Executive Summary Metrics Table
+    has_high = errors and any(e.get('severity','').upper() in ('HIGH','CRITICAL') for e in errors)
+    risk_level = 'HIGH' if has_high else ('MEDIUM' if errors else 'SECURE')
+    
+    summary_data = [
+        [
+            Paragraph("<b>Total Issues</b>", body_style),
+            Paragraph("<b>Assessment Risk Level</b>", body_style),
+            Paragraph("<b>Analysis Status</b>", body_style)
+        ],
+        [
+            Paragraph(str(len(errors) if errors else 0), body_style),
+            Paragraph(f"<b>{risk_level}</b>", body_style),
+            Paragraph("Completed Successfully", body_style)
+        ]
+    ]
+    summary_table = Table(summary_data, colWidths=[W*0.3, W*0.35, W*0.35])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8fafc')),
+        ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#e2e8f0')),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    story.append(summary_table)
+    story.append(Spacer(1, 14))
+
+    # 3. Detailed Findings / Threat Cards
     if errors:
-        # Summary table
-        story.append(section_header('SUMMARY'))
-        story.append(Spacer(1, 2*mm))
-        summary_data = [
-            ['Metric', 'Value'],
-            ['Total Issues', str(len(errors))],
-            ['Risk Level', 'HIGH' if any(e.get('severity','').upper() in ('HIGH','CRITICAL') for e in errors) else 'MEDIUM'],
-        ]
-        tbl = Table(summary_data, colWidths=[W*0.6, W*0.4])
-        tbl.setStyle(_table_style())
-        story.append(tbl)
-        story.append(Spacer(1, 6*mm))
+        story.append(Paragraph('Detailed Findings & Remediation Case Files', section_title))
+        story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#e2e8f0'), spaceAfter=8))
 
-        # Issues overview table
-        story.append(section_header('ISSUES OVERVIEW'))
-        story.append(Spacer(1, 2*mm))
-        overview_data = [['#', 'Type', 'Severity', 'Line']]
         for i, e in enumerate(errors, 1):
-            overview_data.append([
-                str(i),
-                _esc(e['type']),
-                _esc(e.get('severity', 'N/A')),
-                str(e['line']),
-            ])
-        tbl = Table(overview_data, colWidths=[W*0.06, W*0.50, W*0.24, W*0.20])
-        tbl.setStyle(_table_style())
-        story.append(tbl)
-        story.append(Spacer(1, 6*mm))
-
-        # Detailed findings — one table per error
-        story.append(section_header('DETAILED FINDINGS'))
-        story.append(Spacer(1, 2*mm))
-        for i, e in enumerate(errors, 1):
-            rows = [['Field', 'Detail']]
-            rows.append(['Error #', str(i)])
-            rows.append(['Type', _esc(e['type'])])
-            if 'severity' in e:
-                rows.append(['Severity', _esc(e['severity'])])
+            severity = e.get('severity', 'WARNING').upper()
+            sev_color = '#e11d48' if severity in ['HIGH', 'CRITICAL'] else ('#d97706' if severity == 'MEDIUM' else '#059669')
+            
+            card_content = []
+            
+            # Card header line
+            header_html = f"<b>#{i} // {_esc(e.get('type', 'Violation'))}</b> &nbsp;&bull;&nbsp; Line {e.get('line', 'N/A')} &nbsp;&bull;&nbsp; <font color='{sev_color}'><b>[{severity}]</b></font>"
             if 'cvss' in e:
-                rows.append(['CVSS Score', _esc(e['cvss'])])
-            rows.append(['Line', str(e['line'])])
-            rows.append(['Description', Paragraph(_esc(e['message']), normal)])
-            rows.append(['Code Snippet', Paragraph(_esc(e['code']), mono)])
-            rows.append(['Recommendation', Paragraph(_esc(e['suggestion']), normal)])
-            tbl = Table(rows, colWidths=[W*0.25, W*0.75])
-            tbl.setStyle(_table_style())
-            story.append(tbl)
-            story.append(Spacer(1, 4*mm))
+                header_html += f" &nbsp;&bull;&nbsp; CVSS: {_esc(e['cvss'])}"
+            card_content.append(Paragraph(header_html, body_style))
+            card_content.append(Spacer(1, 4))
+            
+            # Description
+            card_content.append(Paragraph(_esc(e.get('message', '')), body_style))
+            
+            # Code snippet box
+            if e.get('code'):
+                card_content.append(Spacer(1, 4))
+                snippet_html = f"<b>Snippet:</b> <code>{_esc(e.get('code'))}</code>"
+                card_content.append(Paragraph(snippet_html, code_style))
+
+            # Recommendation / Fix
+            if e.get('suggestion'):
+                card_content.append(Spacer(1, 4))
+                fix_html = f"<b>Remediation:</b> {_esc(e.get('suggestion'))}"
+                card_content.append(Paragraph(fix_html, fix_style))
+
+            # Wrap each finding into a distinct card table
+            finding_table = Table([[card_content]], colWidths=[W])
+            finding_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#ffffff')),
+                ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#cbd5e1')),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+            ]))
+            
+            story.append(KeepTogether([finding_table, Spacer(1, 8)]))
     else:
-        # Success — summary table
-        story.append(section_header('SUMMARY'))
-        story.append(Spacer(1, 2*mm))
-        summary_data = [
-            ['Metric', 'Value'],
-            ['Total Issues', '0'],
-            ['Risk Level', 'SECURE'],
-        ]
-        tbl = Table(summary_data, colWidths=[W*0.6, W*0.4])
-        tbl.setStyle(_table_style())
-        story.append(tbl)
-        story.append(Spacer(1, 6*mm))
+        story.append(Paragraph('Assessment Outcome', section_title))
+        story.append(Spacer(1, 4))
+        story.append(Paragraph('✅ <b>No security vulnerabilities, injection vectors, or quality issues detected!</b> The target source code passed all AST checks cleanly.', body_style))
+        story.append(Spacer(1, 8))
 
         if code_output:
-            story.append(section_header('CODE OUTPUT'))
-            story.append(Spacer(1, 2*mm))
-            story.append(Paragraph(_esc(code_output), mono))
-            story.append(Spacer(1, 4*mm))
+            story.append(Paragraph('Execution Output', section_title))
+            story.append(Spacer(1, 4))
+            output_table = Table([[Paragraph(_esc(code_output), code_style)]], colWidths=[W])
+            output_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8fafc')),
+                ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#e2e8f0')),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+            ]))
+            story.append(output_table)
 
-    story.append(Spacer(1, 4*mm))
-    story.append(Paragraph('SecureCode — Python Security &amp; Code Quality Analyzer', footer_style))
-    story.append(Paragraph('Copyright © 2025 noob_sandip.', footer_style))
+    # Footer
+    story.append(Spacer(1, 10))
+    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor('#cbd5e1'), spaceAfter=6))
+    footer_style = ParagraphStyle('FooterText', parent=styles['Normal'], fontName='Helvetica', fontSize=8, textColor=colors.HexColor('#64748b'), alignment=1)
+    story.append(Paragraph('SecureCode — Python Security &amp; Code Quality Analyzer | Copyright © 2025 noob_sandip.', footer_style))
 
     doc.build(story)
     with open(report_path, 'wb') as f:
@@ -392,4 +400,3 @@ def health_check_api(request):
         'service': 'SecureCode API',
         'version': '1.0'
     })
-
