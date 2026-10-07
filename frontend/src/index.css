@@ -35,7 +35,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; background: var(--canvas); }
+html { scroll-behavior: smooth; background: var(--canvas); overflow-y: scroll; }
 body {
   margin: 0;
   min-height: 100vh;
@@ -87,6 +87,8 @@ code, pre, textarea.code-input { font-family: var(--mono); }
 .page-bg > main {
   width: min(100% - 40px, 1280px);
   max-width: 1280px;
+  margin-left: auto;   /* <--- Add this */
+  margin-right: auto;  /* <--- Add this */
   padding: 48px 0 72px;
 }
 .page-bg > footer { border-color: var(--line); }
