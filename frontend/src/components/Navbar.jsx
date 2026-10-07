@@ -1,9 +1,31 @@
-// src/components/Navbar.jsx
-import React, { useState } from 'react';
-import { Shield, Terminal, BookOpen, Info, Menu, X, Github } from 'lucide-react';
+// frontend/src/components/Navbar.jsx
+import React, { useState, useEffect } from 'react';
+import { Shield, Terminal, BookOpen, Info, Menu, X, Github, Sun, Moon } from 'lucide-react';
 
 export default function Navbar({ currentPage, onNavigate }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark') ||
+      localStorage.getItem('theme') === 'dark';
+    setDarkMode(isDark);
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+    if (newMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Shield },
@@ -56,11 +78,22 @@ export default function Navbar({ currentPage, onNavigate }) {
             );
           })}
 
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle Theme"
+            className="ml-2 p-2.5 rounded-full border border-transparent hover:border-[var(--line)] hover:bg-[var(--surface)] transition-all flex items-center justify-center text-[var(--muted)] hover:text-[var(--ink)]"
+            title="Toggle Light/Dark Theme"
+          >
+            {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+          </button>
+
+          {/* GitHub Link */}
           <a
             href="https://github.com/stardustpelt/secure-code"
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-2 p-2.5 rounded-full border border-transparent hover:border-[var(--line)] hover:bg-[var(--surface)] transition-all flex items-center justify-center text-[var(--muted)] hover:text-[var(--ink)]"
+            className="p-2.5 rounded-full border border-transparent hover:border-[var(--line)] hover:bg-[var(--surface)] transition-all flex items-center justify-center text-[var(--muted)] hover:text-[var(--ink)]"
             title="GitHub Repository"
           >
             <Github className="w-4 h-4" />
@@ -68,7 +101,16 @@ export default function Navbar({ currentPage, onNavigate }) {
         </nav>
 
         {/* Mobile Menu Button */}
-        <div className="flex md:hidden items-center gap-2">
+        <div className="flex md:hidden items-center gap-1">
+          {/* Theme Toggle (Mobile) */}
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle Theme"
+            className="p-2 rounded-full text-[var(--muted)] hover:text-[var(--ink)]"
+          >
+            {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+          </button>
+
           <a
             href="https://github.com/stardustpelt/secure-code"
             target="_blank"
