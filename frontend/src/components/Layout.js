@@ -135,7 +135,7 @@ function Layout({ children, currentPage, onNavigate }) {
             <Terminal size={12} />
             <span>Python Security & Code Quality Analyzer</span>
           </div>
-          <p className="text-xs text-slate-400 dark:text-slate-600">© 2025 noob_sandip</p>
+          <p className="text-xs text-slate-400 dark:text-slate-600">© 2026 stardustpelt</p>
         </div>
       </footer>
     </div>
