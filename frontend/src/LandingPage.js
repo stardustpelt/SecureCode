@@ -6,9 +6,9 @@ const features = [
   ['01', 'Security checks', 'Look for patterns such as hardcoded credentials, dynamic execution, weak hashes, and injection-prone code.', 'PATTERN MATCHING', '⌕'],
   ['02', 'AST and code quality', 'Parse Python syntax and surface maintainability concerns such as mutable defaults and bare exception handlers.', 'PYTHON SOURCE', '{ }'],
   ['03', 'Safe analysis', 'Inspect source as text and parse its syntax. Submitted Python is not imported or executed by the scanner.', 'NO CODE EXECUTION', '◉'],
-  ['04', 'Useful reports', 'Review results in text or JSON, and create a PDF report with findings and recommendations.', 'TEXT · JSON · PDF', '▤'],
-  ['05', 'Local-first workflow', 'Run the application on your computer. The standard launcher binds the UI and API to loopback.', 'YOUR MACHINE', '⌂'],
-  ['06', 'One-command start', 'Start both the local interface and API with the included launcher.', './RUN-LOCAL.SH', '$'],
+  ['04', 'Useful reports', 'Review results in text or JSON, and create a professional PDF report with findings and recommendations.', 'TEXT · JSON · PDF', '⌤'],
+  ['05', 'Cloud Web Platform', 'Access SecureCode instantly via the browser to scan code snippets or uploaded files on the fly.', 'SAAS PLATFORM', '☁'],
+  ['06', 'Portable CLI Tool', 'Download the standalone CLI package to recursively scan entire local projects and directories.', 'CLI PACKAGE', '$'],
 ];
 
 const samples = [
@@ -40,16 +40,16 @@ function LandingPage() {
       <main id="main">
         <section className="hero" id="top" aria-labelledby="hero-title">
           <div className="hero-copy">
-            <p className="eyebrow"><span className="pulse-dot" aria-hidden="true" />A SMALL, LOCAL-FIRST PYTHON SCANNER</p>
+            <p className="eyebrow"><span className="pulse-dot" aria-hidden="true" />CLOUD SAAS & PORTABLE CLI ANALYZER</p>
             <h1 id="hero-title">SecureCode</h1>
-            <p className="hero-subtitle">Local-First Python Security Scanner</p>
-            <p className="hero-lede">Make risky code easier to spot. SecureCode checks Python source for recognizable security patterns, syntax problems, and code-quality issues. Run it locally, review every finding, and keep your code on your own machine.</p>
+            <p className="hero-subtitle">Python Static Security & Quality Scanner</p>
+            <p className="hero-lede">Make risky code easier to spot. SecureCode checks Python source for security patterns, syntax problems, and code-quality issues. Use the web platform instantly or download the standalone CLI for local project scans.</p>
             <div className="hero-actions">
-              <Link className="button button-primary" to="/app">Get Started <span aria-hidden="true">↗</span></Link>
-              <a className="button button-secondary" href="#features">Learn more <span aria-hidden="true">↓</span></a>
+              <Link className="button button-primary" to="/app">Launch App <span aria-hidden="true">↗</span></Link>
+              <a className="button button-secondary" href="https://github.com/stardustpelt/secure-code/releases/latest/download/securecode-cli.zip">Download CLI <span aria-hidden="true">↓</span></a>
             </div>
             <div className="hero-facts" aria-label="Project characteristics">
-              <span>Python source</span><span>Local workflow</span><span>No code execution</span>
+              <span>Python source</span><span>Web & CLI</span><span>No code execution</span>
             </div>
           </div>
           <div className="hero-panel" aria-label="Illustrative SecureCode finding">
@@ -69,7 +69,7 @@ function LandingPage() {
           <div className="section-heading">
             <p className="eyebrow">01 / FEATURES</p>
             <h2 id="features-title">A practical first pass<br />for Python projects.</h2>
-            <p>Local tooling that makes common issues visible and gives you a useful place to start reviewing.</p>
+            <p>Flexible tooling that makes common security and quality issues visible across web and CLI workflows.</p>
           </div>
           <div className="feature-grid">
             {features.map(([number, title, description, label, icon]) => (
@@ -86,17 +86,35 @@ function LandingPage() {
           <div className="how-inner">
             <div className="section-heading section-heading-dark">
               <p className="eyebrow">02 / HOW IT WORKS</p>
-              <h2 id="how-title">Download. Run locally.<br />Scan and review.</h2>
-              <p>The scanner runs locally on your computer; submitted code stays on your machine.</p>
+              <h2 id="how-title">Choose your workflow.<br />Web SaaS or CLI.</h2>
+              <p>Analyze code instantly on the web platform or run recursive scans locally using the standalone CLI package.</p>
             </div>
             <div className="steps">
-              <article className="step"><span className="step-number">01</span><div className="step-symbol" aria-hidden="true">↓</div><h3>Download the source</h3><p>Clone the SecureCode repository to your computer.</p><pre><code>git clone https://github.com/stardustpelt/secure-code.git{'\n'}cd secure-code</code></pre></article>
+              <article className="step">
+                <span className="step-number">01</span>
+                <div className="step-symbol" aria-hidden="true">☁</div>
+                <h3>Use the Web Platform</h3>
+                <p>Paste snippets or upload files for instant AST analysis and immediate PDF report generation.</p>
+                <pre><code># Launch web app{'\n'}/app</code></pre>
+              </article>
               <span className="step-arrow" aria-hidden="true">→</span>
-              <article className="step"><span className="step-number">02</span><div className="step-symbol" aria-hidden="true">&gt;_</div><h3>Run the launcher</h3><p>From the repository root, start the local UI and API.</p><pre><code>./run-local.sh</code></pre></article>
+              <article className="step">
+                <span className="step-number">02</span>
+                <div className="step-symbol" aria-hidden="true">↓</div>
+                <h3>Download the CLI</h3>
+                <p>Grab the portable bundle from GitHub Releases for recursive offline project scanning.</p>
+                <pre><code># Unzip and install reqs{'\n'}pip install -r requirements.txt</code></pre>
+              </article>
               <span className="step-arrow" aria-hidden="true">→</span>
-              <article className="step"><span className="step-number">03</span><div className="step-symbol" aria-hidden="true">↗</div><h3>Open the browser</h3><p>Use the interface on your own computer, then inspect the report.</p><pre><code>http://127.0.0.1:3000</code></pre></article>
+              <article className="step">
+                <span className="step-number">03</span>
+                <div className="step-symbol" aria-hidden="true">⌤</div>
+                <h3>Export Reports</h3>
+                <p>Generate professional PDF, JSON, or text audit reports for your codebase.</p>
+                <pre><code>python3 cli.py ./project -o report.pdf</code></pre>
+              </article>
             </div>
-            <p className="platform-note">The launcher currently targets Linux and requires Python 3, Node.js/npm, and <code>fuser</code>. See the repository quick start for details.</p>
+            <p className="platform-note">The standalone CLI requires Python 3 and ReportLab. Visit the docs or GitHub for complete usage guidelines.</p>
           </div>
         </section>
 
@@ -121,12 +139,12 @@ function LandingPage() {
           <div className="section-heading">
             <p className="eyebrow">04 / DOCUMENTATION</p>
             <h2 id="docs-title">Keep exploring.</h2>
-            <p>Project guides and scanner details live alongside the source on GitHub.</p>
+            <p>Project guides, API references, and CLI instructions live alongside the source on GitHub.</p>
           </div>
           <div className="docs-links">
-            <a href="https://github.com/stardustpelt/secure-code/blob/main/docs/QUICKSTART.md" target="_blank" rel="noopener noreferrer"><span>01</span><strong>Quick Start</strong><small>Setup and local launch</small><b aria-hidden="true">↗</b></a>
-            <a href="https://github.com/stardustpelt/secure-code/blob/main/docs/ANALYSIS_CAPABILITIES.md" target="_blank" rel="noopener noreferrer"><span>02</span><strong>Analysis Capabilities</strong><small>Checks and limitations</small><b aria-hidden="true">↗</b></a>
-            <a href="https://github.com/stardustpelt/secure-code/blob/main/docs/CLI_DOCUMENTATION.md" target="_blank" rel="noopener noreferrer"><span>03</span><strong>CLI Guide</strong><small>Scan files and folders</small><b aria-hidden="true">↗</b></a>
+            <a href="https://github.com/stardustpelt/secure-code/releases/latest/download/securecode-cli.zip"><span>01</span><strong>CLI Package</strong><small>Download standalone zip</small><b aria-hidden="true">↓</b></a>
+            <a href="https://github.com/stardustpelt/secure-code" target="_blank" rel="noopener noreferrer"><span>02</span><strong>Repository</strong><small>View source code & rules</small><b aria-hidden="true">↗</b></a>
+            <a href="https://github.com/stardustpelt/secure-code/tree/main/docs" target="_blank" rel="noopener noreferrer"><span>03</span><strong>Guides</strong><small>Scan files and folders</small><b aria-hidden="true">↗</b></a>
           </div>
         </section>
 
@@ -136,7 +154,7 @@ function LandingPage() {
         </section>
 
         <section className="closing-cta" aria-labelledby="launch-title">
-          <div><p className="eyebrow">READY TO TAKE A LOOK?</p><h2 id="launch-title">Run the scanner on your own machine.</h2><p>Explore the source, inspect the rules, and try the local workflow.</p></div>
+          <div><p className="eyebrow">READY TO TAKE A LOOK?</p><h2 id="launch-title">Start scanning your Python code.</h2><p>Launch the web application or download the CLI toolkit to get started.</p></div>
           <Link className="button button-dark" to="/app">Launch the scanner <span aria-hidden="true">↗</span></Link>
         </section>
       </main>
